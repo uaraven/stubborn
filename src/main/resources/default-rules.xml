@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<rules>
+    <methods>
+        <method>
+            <returntype>java.lang.String</returntype>
+            <body>return "";</body>
+        </method>
+    </methods>
+</rules>

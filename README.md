@@ -45,7 +45,6 @@ Rules file is an XML-file which defines how exactly should methods be stubbed.
 
 Simplest rule file could be written as following:
 ```
-#!xml
 <?xml version="1.0"?>
 <rules>
     <methods>
@@ -58,7 +57,6 @@ Simplest rule file could be written as following:
 ```
 This rule will match all methods that return String and will replace their body with a simple `return "";` Full syntax of a method matching rule is:
 ```
-#!xml
 <method>
     <returntype></returntype>
     <classname></classname>

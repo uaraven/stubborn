@@ -16,9 +16,11 @@
 
 package net.ninjacat.stubborn.file;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,25 +35,19 @@ public class FsLister implements ClassLister {
     }
 
     private static String convertPathToClassName(String root, String path) {
-        String cn = path.startsWith(root) ? path.substring(root.length() + 1) : path;
+        String cn = path.startsWith(root) ? path.substring(root.length()) : path;
         cn = cn.replaceAll("/", ".");
         return cn.substring(0, cn.length() - CLASS_EXT.length());
     }
 
     @Override
     public List<String> list() {
-        List<String> result = new ArrayList<>();
-        readClasses(new File(root), result);
-        result = result.parallelStream().map(p -> convertPathToClassName(root, p)).collect(Collectors.toList());
-        return result;
-    }
-
-    private void readClasses(File root, List<String> result) {
-        File[] fileList = root.listFiles();
-        if (fileList != null) {
-            List<File> files = Arrays.asList(fileList);
-            files.stream().filter(File::isFile).filter(f -> f.getName().endsWith(CLASS_EXT)).forEach(f -> result.add(f.getAbsolutePath()));
-            files.stream().filter(File::isDirectory).forEach(f -> readClasses(f.getAbsoluteFile(), result));
+        Path path = FileSystems.getDefault().getPath(root);
+        try {
+            return Files.walk(path).map(Path::toFile).filter(f -> f.isFile() && f.getAbsolutePath().endsWith(CLASS_EXT))
+                    .map(f -> convertPathToClassName(root, f.getAbsolutePath())).collect(Collectors.toList());
+        } catch (IOException e) {
+            return Collections.emptyList();
         }
     }
 

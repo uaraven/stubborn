@@ -6,7 +6,7 @@
 
 Stubborn is a command-line utility that cripples perfect Java classes into shadows of their former selves with stubbed methods. Might be useful for testing.
 
-Current version is 0.0.1 and heavy development is ongoing.
+Current version is 0.0.1 and development is ongoing.
 
 #### Longer Version ####
 

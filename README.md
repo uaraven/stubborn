@@ -6,7 +6,7 @@
 
 Stubborn is a command-line utility that cripples perfect Java classes into shadows of their former selves with stubbed methods. Might be useful for testing.
 
-Current version is 0.0.1 and development is ongoing.
+Current version is 0.1 and development is ongoing.
 
 #### Longer Version ####
 
@@ -77,7 +77,7 @@ You can skip any matcher. All supplied matchers are combined with AND operation.
 
 Put your Java code inside `body` tag. This code will be compiled and will be used instead original method body. All limitations of Javassist apply. 
 
-If method is matched by multiple rules, Stubborn will fail immediately telling you which matchers collide. You can override this behavior with `--ignore-duplicate-matchers` parameter, in this case first matcher will be selected.
+If method is matched by multiple rules, Stubborn will fail immediately and tell you which matchers are conflicting. You can override this behavior with `--ignore-duplicate-matchers` parameter, in this case first matcher will be selected.
 
 If method is not matched by any rules its body will be replaced with `return null;` for all methods which return objects and with `return 0;` for all methods which return numbers.
 

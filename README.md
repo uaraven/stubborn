@@ -27,8 +27,9 @@ To start working on Stubborn you will need Java 8 and maven 3. Clone this reposi
 
 To start using Stubborn you have following options:
  
- 1. Clone this repository and run mvn jar:jar. Use that jar file
- 2. No there are no other options right now
+ 1. Clone this repository and run mvn package. This will produce jar file with all dependencies.
+ 2. Use Jar file from bin/ folder
+ 3. No there are no other options right now
  
 ### Usage ###
 

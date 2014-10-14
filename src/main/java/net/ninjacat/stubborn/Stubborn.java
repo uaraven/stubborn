@@ -56,7 +56,7 @@ public class Stubborn {
 
     private static void printHelp(Options options) {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("stubborn", options);
+        formatter.printHelp("stubborn [OPTIONS] -s <source path> -o <output path>", options);
     }
 
     private static Options createOptions() {

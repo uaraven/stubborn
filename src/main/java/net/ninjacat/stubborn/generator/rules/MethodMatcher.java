@@ -51,6 +51,10 @@ public class MethodMatcher {
         return str == null || str.isEmpty();
     }
 
+    public boolean isMissingConditions() {
+        return isEmpty(returnType) && isEmpty(className) && isEmpty(methodName) && isEmpty(signature);
+    }
+
     public boolean isMatching(CtMethod method) {
         return isMatchingSignature(method) && isMatchingParent(method) && isMatchingName(method) && isMatchingResult(method);
     }

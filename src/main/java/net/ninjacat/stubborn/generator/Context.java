@@ -32,6 +32,7 @@ public class Context {
     private final String rules;
     private final boolean stripFields;
     private final boolean ignoreDuplicateMatchers;
+    private final int logLevel;
 
     public Context(CommandLine commandLine) {
         this.sourceRoot = commandLine.getOptionValue("source");
@@ -41,6 +42,12 @@ public class Context {
         this.stripFinals = commandLine.hasOption("strip-final");
         this.stripFields = commandLine.hasOption("strip-fields");
         this.ignoreDuplicateMatchers = commandLine.hasOption("ignore-duplicate-matchers");
+        int loggingLevel = commandLine.hasOption("v") ? 1 : 0;
+        try {
+            loggingLevel = Integer.valueOf(commandLine.getOptionValue("verbose"));
+        } catch (Exception ignored) {
+        }
+        this.logLevel = loggingLevel;
     }
 
     public String getSourceRoot() {
@@ -49,6 +56,10 @@ public class Context {
 
     public String getOutputRoot() {
         return outputRoot;
+    }
+
+    public String getRulesFile() {
+        return rules;
     }
 
     public InputStream getRulesStream() throws FileNotFoundException {
@@ -71,5 +82,7 @@ public class Context {
         return ignoreDuplicateMatchers;
     }
 
-    ;
+    public int getLogLevel() {
+        return logLevel;
+    }
 }

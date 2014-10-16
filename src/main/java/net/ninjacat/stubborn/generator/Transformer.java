@@ -24,6 +24,7 @@ import net.ninjacat.stubborn.generator.rules.MethodMatcher;
 import net.ninjacat.stubborn.generator.rules.RulesProvider;
 
 import javax.inject.Inject;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -31,42 +32,62 @@ import java.util.Optional;
 
 import static javassist.Modifier.FINAL;
 import static javassist.Modifier.PUBLIC;
+import static net.ninjacat.stubborn.generator.LogLevel.*;
 
 public class Transformer {
 
     private final Map<ClassPathType, ClassAccessProvider> providers;
     private final RulesProvider rulesProvider;
+    private final Logger logger;
 
     @Inject
-    public Transformer(Map<ClassPathType, ClassAccessProvider> providers, RulesProvider rulesProvider) {
+    public Transformer(Map<ClassPathType, ClassAccessProvider> providers, RulesProvider rulesProvider, Logger logger) {
         this.providers = providers;
         this.rulesProvider = rulesProvider;
+        this.logger = logger;
     }
 
     public void transform(Context context) {
+        logger.init(context);
+
         ClassPool pool = new ClassPool(true);
         Source source = new Source(context);
+        ClassLister reader = providers.get(source.getType()).getReader(source.getRoot());
+        Writer writer = providers.get(source.getOutputType()).getWriter(context.getOutputRoot());
+        List<String> classList = reader.list();
+        Matchers rules;
         try {
-            ClassLister reader = providers.get(source.getType()).getReader(source.getRoot());
-            Writer writer = providers.get(source.getOutputType()).getWriter(context.getOutputRoot());
-            List<String> classList = reader.list();
-            Matchers rules = rulesProvider.getMatchers(context.getRulesStream());
-            pool.appendClassPath(source.getRoot());
-            for (String className : classList) {
-                transformClass(context, className, pool, rules, writer);
-            }
-            writer.close();
-        } catch (Exception ex) {
-            throw new TransformationException(ex);
+            rules = rulesProvider.getMatchers(context.getRulesStream());
+            logger.log(Noisy, "Loaded rules from %s", context.getRulesFile() == null ? "defaults" : context.getRulesFile());
+        } catch (FileNotFoundException e) {
+            throw new TransformationException("Cannot find rules file");
         }
+        try {
+            pool.appendClassPath(source.getRoot());
+            logger.log(Noisy, "Using %s as source", context.getSourceRoot());
+        } catch (NotFoundException e) {
+            throw new TransformationException("Failed to load source classes from " + source.getRoot(), e);
+        }
+        logger.log(Default, "Classes to process: %d", classList.size());
+        for (String className : classList) {
+            try {
+                transformClass(context, className, pool, rules, writer);
+            } catch (NotFoundException | IOException e) {
+                throw new TransformationException("Failed to load class " + className, e);
+            }
+        }
+        writer.close();
+        logger.log(Default, "Done");
     }
 
-    private void transformClass(Context context, String className, ClassPool pool, Matchers rules, Writer writer) throws NotFoundException, CannotCompileException, IOException {
+    private void transformClass(Context context, String className, ClassPool pool, Matchers rules, Writer writer) throws NotFoundException, IOException {
         CtClass cls = pool.get(className);
         if (context.shouldIgnoreNonPublic() && !isModifier(cls, PUBLIC)) {
+            logger.log(Verbose, "Ignoring non-public class %s", className);
             return;
         }
         if (context.shouldStripFinals() && isModifier(cls, FINAL)) {
+            logger.log(Verbose, "Stripping final modifier from class %s", className);
             cls.setModifiers(cls.getModifiers() - FINAL);
         }
         transformMethods(context, rules, cls);
@@ -77,29 +98,42 @@ public class Transformer {
     private void transformFields(Context context, CtClass cls) throws NotFoundException {
         for (CtField field : cls.getDeclaredFields()) {
             if (context.shouldStripFields()) {
+                logger.log(Noisy, "Removing field %s from class %s", field.getName(), cls.getName());
                 cls.removeField(field);
             } else {
-                if (context.shouldStripFinals() && isModifier(field, FINAL)) {
-                    field.setModifiers(field.getModifiers() - FINAL);
-                }
                 if (context.shouldIgnoreNonPublic() && !isModifier(field, PUBLIC)) {
+                    logger.log(Noisy, "Removing non-public field %s from class %s", field.getName(), cls.getName());
                     cls.removeField(field);
+                } else if (context.shouldStripFinals() && isModifier(field, FINAL)) {
+                    logger.log(Noisy, "Removing final modifier from field %s in class %s", field.getName(), cls.getName());
+                    field.setModifiers(field.getModifiers() - FINAL);
                 }
             }
         }
     }
 
-    private void transformMethods(Context context, Matchers rules, CtClass cls) throws NotFoundException, CannotCompileException {
+    private void transformMethods(Context context, Matchers rules, CtClass cls) throws NotFoundException {
         for (CtMethod method : cls.getDeclaredMethods()) {
             if (context.shouldStripFinals() && isModifier(method, FINAL)) {
+                logger.log(Noisy, "Removing final modifier from method %s in class %s", method.getName(), cls.getName());
                 method.setModifiers(method.getModifiers() - FINAL);
             }
             if (context.shouldIgnoreNonPublic() && !isModifier(method, PUBLIC)) {
+                logger.log(Noisy, "Removing method %s from class %s", method.getName(), cls.getName());
                 cls.removeMethod(method);
             } else {
                 Optional<MethodMatcher> matcher = rules.findMatcher(method, context.shouldIgnoreDuplicateMatchers());
                 String methodBody = matcher.isPresent() ? matcher.get().getMethodBody() : null;
-                replaceMethodBody(method, methodBody);
+                try {
+                    if (methodBody == null) {
+                        logger.log(Verbose, "Rewriting method %s in class %s with default body", method.getName(), cls.getName());
+                    } else {
+                        logger.log(Verbose, "Rewriting method %s in class %s", method.getName(), cls.getName());
+                    }
+                    replaceMethodBody(method, methodBody);
+                } catch (CannotCompileException e) {
+                    throw new TransformationException(String.format("Cannot compile body for method %s. Source:\n%s", method.getLongName(), methodBody), e);
+                }
             }
         }
     }
@@ -112,8 +146,12 @@ public class Transformer {
         return (method.getModifiers() & modifier) == modifier;
     }
 
-    private void storeClass(Writer writer, CtClass cls) throws IOException, CannotCompileException {
-        writer.addClass(cls.getName(), cls.toBytecode());
+    private void storeClass(Writer writer, CtClass cls) throws IOException {
+        try {
+            writer.addClass(cls.getName(), cls.toBytecode());
+        } catch (CannotCompileException e) {
+            throw new TransformationException("Failed to create bytecode for " + cls.getName(), e);
+        }
     }
 
     private void replaceMethodBody(CtMethod method, String methodBody) throws CannotCompileException {

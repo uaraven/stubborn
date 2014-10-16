@@ -57,7 +57,6 @@ public class JarLister implements ClassLister {
             });
             return results.parallelStream().map(this::convertPathToClassName).collect(Collectors.toList());
         } catch (IOException e) {
-            e.printStackTrace();
             return Collections.emptyList();
         }
     }

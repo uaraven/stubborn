@@ -17,6 +17,7 @@
 package net.ninjacat.stubborn.generator.rules;
 
 import javassist.CtMethod;
+import net.ninjacat.stubborn.exceptions.TransformationException;
 import net.ninjacat.stubborn.generator.rules.fixtures.Test1;
 import org.junit.Test;
 
@@ -60,5 +61,11 @@ public class MatchersTest {
         assertTrue("Should find exactly one matcher", matcher.isPresent());
         assertEquals("Should select first matcher", matcher.get().getMethodBody(), "return \"get-string\";");
     }
+
+    @Test(expected = TransformationException.class)
+    public void shouldFailWhenLoading() throws Exception {
+        Matchers.loadFromStream(getClass().getResourceAsStream("/no-conditions-matcher.xml"));
+    }
+
 
 }

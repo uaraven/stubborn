@@ -1,3 +1,3 @@
 #!/bin/bash
 
-$JAVA_HOME/bin/java -jar stubborn-0.1.jar "${@:2}"
+$JAVA_HOME/bin/java -jar stubborn-latest.jar "${@:1}"

@@ -17,6 +17,7 @@
 package net.ninjacat.stubborn;
 
 import net.ninjacat.stubborn.config.Bootstrapper;
+import net.ninjacat.stubborn.exceptions.TransformationException;
 import net.ninjacat.stubborn.generator.Context;
 import net.ninjacat.stubborn.generator.Transformer;
 import org.apache.commons.cli.*;
@@ -51,6 +52,9 @@ public class Stubborn {
         } catch (MissingOptionException ignored) {
             System.out.println("Missing required parameter");
             printHelp(options);
+        } catch (TransformationException ex) {
+            System.out.println("Failed to perform transformation caused by " + ex.getCause());
+            System.out.println(ex.getMessage());
         }
     }
 
@@ -77,7 +81,7 @@ public class Stubborn {
                 withDescription("Remove final modifier from methods and classes").
                 create('f');
         Option verbose = OptionBuilder.withArgName("level").withLongOpt("verbose").
-                withDescription("Provide more output").hasOptionalArg().withType(Integer.class).
+                withDescription("Provide more output (-v 2 for even more output)").hasOptionalArg().withType(Integer.class).
                 create('v');
         Option ignoreDupMatchers = OptionBuilder.withLongOpt("ignore-duplicate-matchers").
                 withDescription("Ignore duplicate matchers, use first defined.").create('i');

@@ -74,7 +74,7 @@ Supported matchers:
 * MethodName - another regular expression which matches method name itself
 * Signature - matches method signature, for example `(IZ)Ljava/lang/String;` will match any method which accepts `int` and `boolean` as parameters and returns `String`
 
-You can skip any matcher. All supplied matchers are combined with AND operation. Obviously it makes no sense in using both ReturnType and Signature.
+You can skip any matcher. All supplied matchers are combined with AND operation. Obviously it makes no sense in using both ReturnType and Signature. Rule must contain at least one matcher.
 
 Put your Java code inside `body` tag. This code will be compiled and will be used instead original method body. All limitations of Javassist apply. 
 

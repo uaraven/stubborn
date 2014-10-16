@@ -18,6 +18,7 @@ package net.ninjacat.stubborn.file;
 
 import net.ninjacat.stubborn.exceptions.TransformationException;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -30,11 +31,16 @@ public class JarWriter implements Writer {
 
     public JarWriter(String jarFile) {
         try {
+            File path = new File(jarFile).getParentFile();
+            if (!path.exists()) {
+                path.mkdirs();
+            }
+
             this.jarFile = new ZipOutputStream(new FileOutputStream(jarFile));
 
             writeManifest();
         } catch (IOException e) {
-            throw new TransformationException(e);
+            throw new TransformationException("Invalid target path: " + jarFile, e);
         }
     }
 
@@ -48,7 +54,7 @@ public class JarWriter implements Writer {
             jarFile.write(classData, 0, classData.length);
             jarFile.closeEntry();
         } catch (IOException e) {
-            throw new TransformationException(e);
+            throw new TransformationException("Failed to write JAR", e);
         }
     }
 

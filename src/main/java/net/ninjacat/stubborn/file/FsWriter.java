@@ -16,6 +16,8 @@
 
 package net.ninjacat.stubborn.file;
 
+import net.ninjacat.stubborn.exceptions.TransformationException;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,7 +38,7 @@ public class FsWriter implements Writer {
         try (FileOutputStream output = new FileOutputStream(targetFile)) {
             output.write(classData);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new TransformationException("Failed to write resulting class file " + targetFile, e);
         }
     }
 

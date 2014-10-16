@@ -20,9 +20,8 @@ package net.ninjacat.stubborn.generator.rules;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import javassist.CtMethod;
+import net.ninjacat.stubborn.exceptions.TransformationException;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,20 +37,19 @@ public class Matchers {
         this.matchers = new ArrayList<>();
     }
 
-    public static Matchers loadFromString(String rules) {
-        XStream stream = new XStream();
-        stream.processAnnotations(new Class[]{Matchers.class, MethodMatcher.class});
-        return (Matchers) stream.fromXML(rules);
-    }
-
-    public static Matchers loadFromFile(String rulesFile) throws FileNotFoundException {
-        return loadFromStream(new FileInputStream(rulesFile));
-    }
-
     public static Matchers loadFromStream(InputStream inputStream) {
         XStream stream = new XStream();
         stream.processAnnotations(new Class[]{Matchers.class, MethodMatcher.class});
-        return (Matchers) stream.fromXML(inputStream);
+        return verify((Matchers) stream.fromXML(inputStream));
+    }
+
+    private static Matchers verify(Matchers matchers) {
+        for (MethodMatcher mm : matchers.matchers) {
+            if (mm.isMissingConditions()) {
+                throw new TransformationException("Matcher with no conditions: " + mm);
+            }
+        }
+        return matchers;
     }
 
     public Optional<MethodMatcher> findMatcher(CtMethod method, boolean ignoreDuplicates) {

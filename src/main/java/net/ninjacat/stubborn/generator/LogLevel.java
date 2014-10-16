@@ -14,20 +14,20 @@
  *   limitations under the License.
  */
 
-package net.ninjacat.stubborn.config;
+package net.ninjacat.stubborn.generator;
 
-import com.google.inject.AbstractModule;
-import net.ninjacat.stubborn.generator.Logger;
-import net.ninjacat.stubborn.generator.Transformer;
-import net.ninjacat.stubborn.generator.rules.RulesProvider;
+public enum LogLevel {
+    Default(0),
+    Verbose(1),
+    Noisy(2);
 
-import javax.inject.Singleton;
+    private final int level;
 
-public class GeneratorModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(Logger.class);
-        bind(Transformer.class);
-        bind(RulesProvider.class).in(Singleton.class);
+    LogLevel(int level) {
+        this.level = level;
+    }
+
+    public int getLevel() {
+        return level;
     }
 }

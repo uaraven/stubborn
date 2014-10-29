@@ -32,7 +32,7 @@ public class JarWriter implements Writer {
     public JarWriter(String jarFile) {
         try {
             File path = new File(jarFile).getParentFile();
-            if (!path.exists()) {
+            if (path != null && !path.exists()) {
                 path.mkdirs();
             }
 

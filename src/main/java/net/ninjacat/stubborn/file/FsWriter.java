@@ -34,7 +34,10 @@ public class FsWriter implements Writer {
     public void addClass(String canonicalName, byte[] classData) {
         String path = root + File.separator + canonicalName.replaceAll("\\.", "/") + Consts.CLASS_EXT;
         File targetFile = new File(path);
-        targetFile.getParentFile().mkdirs();
+        File parent = targetFile.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
         try (FileOutputStream output = new FileOutputStream(targetFile)) {
             output.write(classData);
         } catch (IOException e) {

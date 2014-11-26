@@ -45,7 +45,7 @@ public class Context {
         stripFinals = commandLine.hasOption("strip-final");
         stripFields = commandLine.hasOption("strip-fields");
         ignoreDuplicateMatchers = commandLine.hasOption("ignore-duplicate-matchers");
-        objectReturnStrategy = commandLine.hasOption("return-instances") ? ReturnObjects.Instance : ReturnObjects.Nulls;
+        objectReturnStrategy = commandLine.hasOption("generate-instances") ? ReturnObjects.Instance : ReturnObjects.Nulls;
         int loggingLevel = commandLine.hasOption("v") ? 1 : 0;
         try {
             loggingLevel = Integer.valueOf(commandLine.getOptionValue("verbose"));

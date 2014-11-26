@@ -17,6 +17,7 @@
 package net.ninjacat.stubborn.generator;
 
 import javassist.*;
+import javassist.runtime.Desc;
 import net.ninjacat.stubborn.exceptions.TransformationException;
 import net.ninjacat.stubborn.file.*;
 import net.ninjacat.stubborn.generator.rules.Matchers;
@@ -81,6 +82,13 @@ public class Transformer {
                 throw new TransformationException("Failed to load class " + className, e);
             }
         }
+
+        try {
+            injectJavassistRuntime(pool, writer);
+        } catch (NotFoundException | IOException ignored) {
+            logger.log(Default, "Failed to inject required javassist runtime class, results may be not usable");
+        }
+
         writer.close();
 
         logger.log(Default, "Done");
@@ -102,8 +110,18 @@ public class Transformer {
         }
     }
 
-    private static void replaceMethodBody(CtBehavior method, String methodBody) throws CannotCompileException {
-        method.setBody(methodBody);
+    private static void replaceMethodBody(CtBehavior method, String methodBody) {
+        try {
+            method.setBody(methodBody);
+        } catch (CannotCompileException e) {
+            throw new TransformationException(String.format("Cannot compile body for method %s. Source:\n%s", method.getLongName(), methodBody), e);
+        }
+    }
+
+    private void injectJavassistRuntime(ClassPool pool, Writer writer) throws NotFoundException, IOException {
+        logger.log(Verbose, "Injecting javassist runtime");
+        CtClass javassistDesc = pool.get(Desc.class.getCanonicalName());
+        storeClass(writer, javassistDesc);
     }
 
     private void transformClass(Context context, String className, ClassPool pool, Matchers rules, Writer writer) throws NotFoundException, IOException {
@@ -125,6 +143,7 @@ public class Transformer {
             logger.log(Verbose, "Stripping final modifier from class %s", className);
             cls.setModifiers(cls.getModifiers() - FINAL);
         }
+        transformConstructors(context, rules, cls);
         transformMethods(context, rules, cls);
         transformFields(context, cls);
         storeClass(writer, cls);
@@ -142,6 +161,18 @@ public class Transformer {
         }
     }
 
+    private void transformConstructors(Context context, Matchers rules, CtClass cls) throws NotFoundException {
+        for (CtConstructor constructor : cls.getConstructors()) {
+            if (context.shouldIgnoreNonPublic() && !isModifier(constructor, PUBLIC)) {
+                logger.log(Noisy, "Removing constructor %s from class %s", constructor.getName(), cls.getName());
+                cls.removeConstructor(constructor);
+            } else {
+                logger.log(Noisy, "Removing class %s constructor %s body", cls.getName(), constructor.getSignature());
+                replaceMethodBody(constructor, null);
+            }
+        }
+    }
+
     private void transformMethods(Context context, Matchers rules, CtClass cls) throws NotFoundException {
         for (CtMethod method : cls.getDeclaredMethods()) {
             if (context.shouldStripFinals() && isModifier(method, FINAL)) {
@@ -154,12 +185,8 @@ public class Transformer {
             } else {
                 Optional<MethodMatcher> matcher = rules.findMatcher(method, context.shouldIgnoreDuplicateMatchers());
                 String methodBody = matcher.isPresent() ? matcher.get().getMethodBody() : null;
-                try {
-                    methodBody = bodyGenerator.alterBody(context, cls, method, methodBody);
-                    replaceMethodBody(method, methodBody);
-                } catch (CannotCompileException e) {
-                    throw new TransformationException(String.format("Cannot compile body for method %s. Source:\n%s", method.getLongName(), methodBody), e);
-                }
+                methodBody = bodyGenerator.alterBody(context, cls, method, methodBody);
+                replaceMethodBody(method, methodBody);
             }
         }
     }

@@ -17,7 +17,7 @@
 package net.ninjacat.stubborn.generator.rules;
 
 import javassist.CtMethod;
-import net.ninjacat.stubborn.generator.rules.fixtures.Test1;
+import net.ninjacat.stubborn.fixtures.Test1;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;

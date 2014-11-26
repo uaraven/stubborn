@@ -14,7 +14,9 @@
  *   limitations under the License.
  */
 
-package net.ninjacat.stubborn.generator.rules.fixtures;
+package net.ninjacat.stubborn.fixtures;
+
+import net.ninjacat.stubborn.test.Pojo;
 
 /**
  * User: ovoronin
@@ -39,4 +41,10 @@ public class Test1 {
 
     public void interestingMethodName() {
     }
+
+    public Pojo getPojo() {
+        return null;
+    }
+
+    ;
 }

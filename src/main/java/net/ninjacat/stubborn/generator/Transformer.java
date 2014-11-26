@@ -80,8 +80,37 @@ public class Transformer {
         logger.log(Default, "Done");
     }
 
+    private static String injectMethodVariable(String methodBody, CtMethod method) {
+        String result = methodBody.replaceAll("\\$method", "\"" + method.getName() + "\"");
+        result = result.replaceAll("\\$sign", "\"" + method.getSignature() + "\"");
+        return result;
+    }
+
+    private static boolean isModifier(CtClass cls, int modifier) {
+        return (cls.getModifiers() & modifier) == modifier;
+    }
+
+    private static boolean isModifier(CtMember method, int modifier) {
+        return (method.getModifiers() & modifier) == modifier;
+    }
+
+    private static void storeClass(Writer writer, CtClass cls) throws IOException {
+        try {
+            writer.addClass(cls.getName(), cls.toBytecode());
+        } catch (CannotCompileException e) {
+            throw new TransformationException("Failed to create bytecode for " + cls.getName(), e);
+        }
+    }
+
+    private static void replaceMethodBody(CtMethod method, String methodBody) throws CannotCompileException {
+        method.setBody(methodBody);
+    }
+
     private void transformClass(Context context, String className, ClassPool pool, Matchers rules, Writer writer) throws NotFoundException, IOException {
         CtClass cls = pool.get(className);
+        if (rules.shouldStripClass(className)) {
+            return;
+        }
         if (context.shouldIgnoreNonPublic() && !isModifier(cls, PUBLIC)) {
             logger.log(Verbose, "Ignoring non-public class %s", className);
             return;
@@ -128,6 +157,7 @@ public class Transformer {
                     if (methodBody == null) {
                         logger.log(Verbose, "Rewriting method %s in class %s with default body", method.getName(), cls.getName());
                     } else {
+                        methodBody = injectMethodVariable(methodBody, method);
                         logger.log(Verbose, "Rewriting method %s in class %s", method.getName(), cls.getName());
                     }
                     replaceMethodBody(method, methodBody);
@@ -136,26 +166,6 @@ public class Transformer {
                 }
             }
         }
-    }
-
-    private boolean isModifier(CtClass cls, int modifier) {
-        return (cls.getModifiers() & modifier) == modifier;
-    }
-
-    private boolean isModifier(CtMember method, int modifier) {
-        return (method.getModifiers() & modifier) == modifier;
-    }
-
-    private void storeClass(Writer writer, CtClass cls) throws IOException {
-        try {
-            writer.addClass(cls.getName(), cls.toBytecode());
-        } catch (CannotCompileException e) {
-            throw new TransformationException("Failed to create bytecode for " + cls.getName(), e);
-        }
-    }
-
-    private void replaceMethodBody(CtMethod method, String methodBody) throws CannotCompileException {
-        method.setBody(methodBody);
     }
 
 }

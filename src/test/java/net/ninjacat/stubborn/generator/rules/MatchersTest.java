@@ -18,14 +18,13 @@ package net.ninjacat.stubborn.generator.rules;
 
 import javassist.CtMethod;
 import net.ninjacat.stubborn.exceptions.TransformationException;
-import net.ninjacat.stubborn.generator.rules.fixtures.Test1;
+import net.ninjacat.stubborn.fixtures.Test1;
 import org.junit.Test;
 
 import java.util.Optional;
 
 import static net.ninjacat.stubborn.generator.rules.ClassFixtures.getMethod;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class MatchersTest {
 
@@ -50,7 +49,7 @@ public class MatchersTest {
     }
 
 
-    @Test()
+    @Test
     public void shouldSelectFirstMatcherFromDuplicate() throws Exception {
         Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/duplicate-getter.xml"));
 
@@ -67,5 +66,26 @@ public class MatchersTest {
         Matchers.loadFromStream(getClass().getResourceAsStream("/no-conditions-matcher.xml"));
     }
 
+    @Test
+    public void shouldLoadClassesToStrip() throws Exception {
+        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
+
+        assertTrue("Should load list of classes to strip", matchers.shouldStripClass("java.util.Date"));
+        assertTrue("Should load list of classes to strip", matchers.shouldStripClass("java.lang.CharSequence"));
+    }
+
+    @Test
+    public void shouldNotAllowToStripClassesNotInRules() throws Exception {
+        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
+
+        assertFalse("Should not allow to strip unlisted class", matchers.shouldStripClass("java.sql.Date"));
+    }
+
+    @Test
+    public void shouldNotFailIfRulesDoesNotContainClasses() throws Exception {
+        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/string-getter.xml"));
+
+        assertFalse("Should not allow to strip unlisted class", matchers.shouldStripClass("java.sql.Date"));
+    }
 
 }

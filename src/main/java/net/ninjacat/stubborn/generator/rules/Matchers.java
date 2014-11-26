@@ -19,6 +19,7 @@ package net.ninjacat.stubborn.generator.rules;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import javassist.CtMethod;
 import net.ninjacat.stubborn.exceptions.TransformationException;
 
@@ -26,15 +27,21 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @XStreamAlias("rules")
 public class Matchers {
     @XStreamAlias("methods")
     private final List<MethodMatcher> matchers;
+    @XStreamImplicit(itemFieldName = "strip-class")
+    private final List<String> stripClasses;
+
+    private List<Pattern> stripPatterns;
 
     public Matchers() {
-        this.matchers = new ArrayList<>();
+        matchers = new ArrayList<>();
+        stripClasses = new ArrayList<>();
     }
 
     public static Matchers loadFromStream(InputStream inputStream) {
@@ -43,13 +50,16 @@ public class Matchers {
         return verify((Matchers) stream.fromXML(inputStream));
     }
 
-    private static Matchers verify(Matchers matchers) {
-        for (MethodMatcher mm : matchers.matchers) {
-            if (mm.isMissingConditions()) {
-                throw new TransformationException("Matcher with no conditions: " + mm);
+    public boolean shouldStripClass(CharSequence className) {
+        if (stripPatterns == null) {
+            loadStripPatterns();
+        }
+        for (Pattern pattern : stripPatterns) {
+            if (pattern.matcher(className).matches()) {
+                return true;
             }
         }
-        return matchers;
+        return false;
     }
 
     public Optional<MethodMatcher> findMatcher(CtMethod method, boolean ignoreDuplicates) {
@@ -62,6 +72,26 @@ public class Matchers {
             return Optional.empty();
         } else {
             return Optional.of(matchingList.get(0));
+        }
+    }
+
+    private static Matchers verify(Matchers matchers) {
+        for (MethodMatcher mm : matchers.matchers) {
+            if (mm.isMissingConditions()) {
+                throw new TransformationException("Matcher with no conditions: " + mm);
+            }
+        }
+        return matchers;
+    }
+
+    private void loadStripPatterns() {
+        stripPatterns = new ArrayList<>();
+        //noinspection ConstantConditions
+        if (stripClasses == null) {
+            return;
+        }
+        for (String classRegexp : stripClasses) {
+            stripPatterns.add(Pattern.compile(classRegexp));
         }
     }
 }

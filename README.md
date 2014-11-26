@@ -76,7 +76,12 @@ Supported matchers:
 
 You can skip any matcher. All supplied matchers are combined with AND operation. Obviously it makes no sense in using both ReturnType and Signature. Rule must contain at least one matcher.
 
-Put your Java code inside `body` tag. This code will be compiled and will be used instead original method body. All limitations of Javassist apply. 
+Put your Java code inside `body` tag. This code will be compiled and will be used instead original method body. All limitations of Javassist apply.
+ 
+See [Javassist Tutorial](http://www.csg.ci.i.u-tokyo.ac.jp/~chiba/javassist/tutorial/tutorial2.html#intro) and especially [alteration section](http://www.csg.ci.i.u-tokyo.ac.jp/~chiba/javassist/tutorial/tutorial2.html#alter) to get understanding how javassist method altering works and which special identifiers are supported. In addition to javassist identifiers Stubborn supports additional identifiers:
+
+* `$method` which will be replaced with a string containing name of the current method
+* `$sign` which will be replaced with a current method's signature.
 
 If method is matched by multiple rules, Stubborn will fail immediately and tell you which matchers are conflicting. You can override this behavior with `--ignore-duplicate-matchers` parameter, in this case first matcher will be selected.
 
@@ -84,17 +89,26 @@ If method is not matched by any rules its body will be replaced with `return nul
 
 If no matching rules are supplied the default one will be used. It is actually the one shown in the example above. All methods which return `java.lang.String` will return empty string, other methods will be stubbed with default value (i.e. zero, null or false).
 
+You can also remove classes from the processed jar/folder. For this include regular expressions to match fully qualified class names in the rules file as
+```
+<?xml version="1.0"?>
+<rules>
+    <strip-class>org\.unneeded\..*</strip-class>
+    <strip-class>org\.useful\.Unused</strip-class>
+    <methods>
+        .
+        .
+        .
+    </methods>
+</rules>
+```
+
 There are several more command-line parameters which affect how resulting classes are generated:
 
 * `--strip-non-public` will remove all non-public methods and fields from the resulting class
 * `--strip-fields` will remove all fields from class
 * `--strip-final` will remove all final modifiers from classes and methods, so you can easily mock them with Mockito or similar tool
 * `--help` will display more detailed information on command-line parameters
-
-#### Limitations ####
-
-Unfortunately, while being written in Java 8 itself, Stubborn does not support class-files generated with Java 8. 
-This is a limitation of Javassist.
 
 ### Authors ###
 

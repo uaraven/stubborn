@@ -20,11 +20,8 @@ public class Logger {
 
     private int level;
 
-    public Logger() {
-    }
-
     public void init(Context context) {
-        this.level = context.getLogLevel();
+        level = context.getLogLevel();
     }
 
     public void log(LogLevel level, String text, Object... params) {

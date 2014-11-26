@@ -36,20 +36,20 @@ public class Context {
     private final int logLevel;
 
     public Context(CommandLine commandLine) {
-        this.sourceRoot = commandLine.getOptionValue("source");
-        this.outputRoot = commandLine.getOptionValue("output");
-        this.rules = commandLine.getOptionValue("transform-rules");
-        this.stripNonPublic = commandLine.hasOption("strip-non-public");
-        this.stripFinals = commandLine.hasOption("strip-final");
-        this.stripFields = commandLine.hasOption("strip-fields");
-        this.ignoreDuplicateMatchers = commandLine.hasOption("ignore-duplicate-matchers");
-        this.objectReturnStrategy = commandLine.hasOption("return-instances") ? ReturnObjects.Instance : ReturnObjects.Nulls;
+        sourceRoot = commandLine.getOptionValue("source");
+        outputRoot = commandLine.getOptionValue("output");
+        rules = commandLine.getOptionValue("transform-rules");
+        stripNonPublic = commandLine.hasOption("strip-non-public");
+        stripFinals = commandLine.hasOption("strip-final");
+        stripFields = commandLine.hasOption("strip-fields");
+        ignoreDuplicateMatchers = commandLine.hasOption("ignore-duplicate-matchers");
+        objectReturnStrategy = commandLine.hasOption("return-instances") ? ReturnObjects.Instance : ReturnObjects.Nulls;
         int loggingLevel = commandLine.hasOption("v") ? 1 : 0;
         try {
             loggingLevel = Integer.valueOf(commandLine.getOptionValue("verbose"));
         } catch (Exception ignored) {
         }
-        this.logLevel = loggingLevel;
+        logLevel = loggingLevel;
     }
 
     public String getSourceRoot() {
@@ -65,7 +65,7 @@ public class Context {
     }
 
     public InputStream getRulesStream() throws FileNotFoundException {
-        return rules == null || rules.isEmpty() ? this.getClass().getResourceAsStream(DEFAULT_RULES_FILE) : new FileInputStream(rules);
+        return rules == null || rules.isEmpty() ? getClass().getResourceAsStream(DEFAULT_RULES_FILE) : new FileInputStream(rules);
     }
 
     public boolean shouldStripFinals() {

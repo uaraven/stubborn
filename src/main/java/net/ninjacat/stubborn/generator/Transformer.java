@@ -60,19 +60,15 @@ public class Transformer {
         ClassLister reader = providers.get(source.getType()).getReader(source.getRoot());
         Writer writer = providers.get(source.getOutputType()).getWriter(context.getOutputRoot());
         List<String> classList = reader.list();
-        Matchers rules;
-        try {
-            rules = rulesProvider.getMatchers(context.getRulesStream());
-            logger.log(Noisy, "Loaded rules from %s", context.getRulesFile() == null ? "defaults" : context.getRulesFile());
-        } catch (FileNotFoundException e) {
-            throw new TransformationException("Cannot find rules file");
-        }
+
+        Matchers rules = getMatchers(context);
         try {
             pool.appendClassPath(source.getRoot());
             logger.log(Noisy, "Using %s as source", context.getSourceRoot());
         } catch (NotFoundException e) {
             throw new TransformationException("Failed to load source classes from " + source.getRoot(), e);
         }
+
         logger.log(Default, "Classes to process: %d", classList.size());
         for (String className : classList) {
             try {
@@ -82,7 +78,28 @@ public class Transformer {
             }
         }
         writer.close();
+
         logger.log(Default, "Done");
+    }
+
+    private static boolean isModifier(CtClass cls, int modifier) {
+        return (cls.getModifiers() & modifier) == modifier;
+    }
+
+    private static boolean isModifier(CtMember method, int modifier) {
+        return (method.getModifiers() & modifier) == modifier;
+    }
+
+    private static void storeClass(Writer writer, CtClass cls) throws IOException {
+        try {
+            writer.addClass(cls.getName(), cls.toBytecode());
+        } catch (CannotCompileException e) {
+            throw new TransformationException("Failed to create bytecode for " + cls.getName(), e);
+        }
+    }
+
+    private static void replaceMethodBody(CtBehavior method, String methodBody) throws CannotCompileException {
+        method.setBody(methodBody);
     }
 
     private void transformClass(Context context, String className, ClassPool pool, Matchers rules, Writer writer) throws NotFoundException, IOException {
@@ -142,24 +159,15 @@ public class Transformer {
         }
     }
 
-    private boolean isModifier(CtClass cls, int modifier) {
-        return (cls.getModifiers() & modifier) == modifier;
-    }
-
-    private boolean isModifier(CtMember method, int modifier) {
-        return (method.getModifiers() & modifier) == modifier;
-    }
-
-    private void storeClass(Writer writer, CtClass cls) throws IOException {
+    private Matchers getMatchers(Context context) {
+        Matchers rules;
         try {
-            writer.addClass(cls.getName(), cls.toBytecode());
-        } catch (CannotCompileException e) {
-            throw new TransformationException("Failed to create bytecode for " + cls.getName(), e);
+            rules = rulesProvider.getMatchers(context.getRulesStream());
+            logger.log(Noisy, "Loaded rules from %s", context.getRulesFile() == null ? "defaults" : context.getRulesFile());
+        } catch (FileNotFoundException e) {
+            throw new TransformationException("Cannot find rules file", e);
         }
-    }
-
-    private void replaceMethodBody(CtMethod method, String methodBody) throws CannotCompileException {
-        method.setBody(methodBody);
+        return rules;
     }
 
 }

@@ -27,8 +27,8 @@ import javax.inject.Singleton;
 public class GeneratorModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(Logger.class);
         bind(Transformer.class);
+        bind(Logger.class).in(Singleton.class);
         bind(BodyGenerator.class).in(Singleton.class);
         bind(RulesProvider.class).in(Singleton.class);
     }

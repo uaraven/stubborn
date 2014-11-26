@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 
+import static net.ninjacat.stubborn.generator.LogLevel.Noisy;
 import static net.ninjacat.stubborn.generator.LogLevel.Verbose;
 
 public class BodyGenerator {
@@ -35,23 +36,29 @@ public class BodyGenerator {
         this.logger = logger;
     }
 
+    public String alterBody(Context context, CtClass cls, CtMethod method, String methodBody) {
+        String body = methodBody;
+        if (body == null) {
+            if (context.getObjectReturnStrategy() == ReturnObjects.Instance) {
+                logger.log(Verbose, "Rewriting method %s in class %s with default body",
+                        method.getName(), method.getDeclaringClass().getName());
+                body = generateReturnInstance(method);
+            }
+        } else {
+            body = injectMethodVariable(methodBody, method);
+            logger.log(Verbose, "Rewriting method %s in class %s", method.getName(), cls.getName());
+        }
+        return body;
+    }
+
     private static String injectMethodVariable(String methodBody, CtMethod method) {
         String result = methodBody.replaceAll("\\$method", "\"" + method.getName() + "\"");
         result = result.replaceAll("\\$sign", "\"" + method.getSignature() + "\"");
         return result;
     }
 
-    public String alterBody(Context context, CtClass cls, CtMethod method, String methodBody) {
-        if (methodBody == null) {
-            logger.log(Verbose, "Rewriting method %s in class %s with default body", method.getName(), cls.getName());
-            if (context.getObjectReturnStrategy() == ReturnObjects.Instance) {
-                methodBody = generateReturnInstance(method);
-            }
-        } else {
-            methodBody = injectMethodVariable(methodBody, method);
-            logger.log(Verbose, "Rewriting method %s in class %s", method.getName(), cls.getName());
-        }
-        return methodBody;
+    private static boolean requiresCustomReturn(CtClass returnType) {
+        return !returnType.isPrimitive() && !returnType.isArray() && !returnType.isEnum();
     }
 
     @Nullable
@@ -59,17 +66,17 @@ public class BodyGenerator {
         try {
             CtClass returnType = method.getReturnType();
             if (Types.isBoxType(returnType)) {
+                logger.log(Noisy, "Using boxed wrapper constructor in method %s in class %s",
+                        method.getName(), method.getDeclaringClass().getName());
                 return "return " + Types.getDefaultValueLiteral(returnType) + ";";
             } else if (requiresCustomReturn(returnType)) {
+                logger.log(Noisy, "Using newInstance() in method %s in class %s",
+                        method.getName(), method.getDeclaringClass().getName());
                 return "return ($r)$type.newInstance();";
             }
         } catch (NotFoundException ignored) {
         }
         return null;
-    }
-
-    private boolean requiresCustomReturn(CtClass returnType) {
-        return !returnType.isPrimitive() && !returnType.isArray() && !returnType.isEnum();
     }
 
 

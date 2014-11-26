@@ -92,7 +92,7 @@ This behavior can be changed with `--generate-instances` option. When this optio
  
 All methods which return `java.lang.String` will return empty string, other methods will be stubbed with default value (i.e. zero, null or false).
 
-You can also remove classes from the processed jar/folder. For this include regular expressions to match fully qualified class names in the rules file as
+You can also remove classes from the processed jar/folder. Use `<strip-class>` tag with regular expressions to match fully qualified class names to be removed.
 ```
 <?xml version="1.0"?>
 <rules>
@@ -106,7 +106,7 @@ You can also remove classes from the processed jar/folder. For this include regu
 </rules>
 ```
 
-If you do not want to transform a class, you can add a rule to skip it. For this include regular expressions to match fully qualified class names in the rules file as
+If you do not want to transform a class, you can add a rule to skip it. To achieve this include regular expressions to match fully qualified class names in the rules in `<skip-class>` tag.
 ```
 <?xml version="1.0"?>
 <rules>

@@ -32,6 +32,7 @@ public class Context {
     private final String sourceRoot;
     private final String outputRoot;
     private final String rules;
+    private final String classPath;
     private final boolean ignoreDuplicateMatchers;
     private final int logLevel;
 
@@ -39,6 +40,7 @@ public class Context {
         sourceRoot = commandLine.getOptionValue("source");
         outputRoot = commandLine.getOptionValue("output");
         rules = commandLine.getOptionValue("transform-rules");
+        classPath = commandLine.hasOption("classpath") ? commandLine.getOptionValue("classpath") : "";
         stripNonPublic = commandLine.hasOption("strip-non-public");
         stripFinals = commandLine.hasOption("strip-final");
         stripFields = commandLine.hasOption("strip-fields");
@@ -62,6 +64,14 @@ public class Context {
 
     public String getRulesFile() {
         return rules;
+    }
+
+    public boolean hasClassPath() {
+        return classPath != null && !classPath.isEmpty();
+    }
+
+    public String getClassPath() {
+        return classPath;
     }
 
     public InputStream getRulesStream() throws FileNotFoundException {

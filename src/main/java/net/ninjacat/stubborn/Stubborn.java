@@ -49,8 +49,8 @@ public class Stubborn {
             Transformer transformer = Bootstrapper.get(Transformer.class);
 
             transformer.transform(context);
-        } catch (MissingOptionException ignored) {
-            System.out.println("Missing required parameter");
+        } catch (MissingOptionException ex) {
+            System.out.println("Missing required parameter " + ex.getMissingOptions());
             printHelp(options);
         } catch (TransformationException ex) {
             System.out.println("Failed to perform transformation caused by " + ex.getCause());
@@ -88,6 +88,8 @@ public class Stubborn {
                 create('v');
         Option ignoreDupMatchers = OptionBuilder.withLongOpt("ignore-duplicate-matchers").
                 withDescription("Ignore duplicate matchers, use first defined.").create('i');
+        Option classPath = OptionBuilder.withLongOpt("classpath").hasArg().
+                withDescription("Additional classpath to be used during transformation").create("c");
         Option help = new Option("h", "help", false, "Show this help message");
 
         Options options = new Options();
@@ -100,6 +102,7 @@ public class Stubborn {
         options.addOption(generateInstances);
         options.addOption(verbose);
         options.addOption(ignoreDupMatchers);
+        options.addOption(classPath);
         options.addOption(help);
 
         return options;

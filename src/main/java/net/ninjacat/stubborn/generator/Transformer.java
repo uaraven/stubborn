@@ -65,6 +65,10 @@ public class Transformer {
         try {
             pool.appendClassPath(source.getRoot());
             logger.log(Noisy, "Using %s as source", context.getSourceRoot());
+            if (context.hasClassPath()) {
+                logger.log(Noisy, "Adding %s as additional classpath", context.getClassPath());
+                pool.appendPathList(context.getClassPath());
+            }
         } catch (NotFoundException e) {
             throw new TransformationException("Failed to load source classes from " + source.getRoot(), e);
         }
@@ -104,7 +108,13 @@ public class Transformer {
 
     private void transformClass(Context context, String className, ClassPool pool, Matchers rules, Writer writer) throws NotFoundException, IOException {
         CtClass cls = pool.get(className);
+        if (rules.shouldSkipClass(className)) {
+            logger.log(Verbose, "Skipping class %s", className);
+            storeClass(writer, cls);
+            return;
+        }
         if (rules.shouldStripClass(className)) {
+            logger.log(Verbose, "Stripping class %s", className);
             return;
         }
         if (context.shouldIgnoreNonPublic() && !isModifier(cls, PUBLIC)) {
@@ -125,14 +135,9 @@ public class Transformer {
             if (context.shouldStripFields()) {
                 logger.log(Noisy, "Removing field %s from class %s", field.getName(), cls.getName());
                 cls.removeField(field);
-            } else {
-                if (context.shouldIgnoreNonPublic() && !isModifier(field, PUBLIC)) {
-                    logger.log(Noisy, "Removing non-public field %s from class %s", field.getName(), cls.getName());
-                    cls.removeField(field);
-                } else if (context.shouldStripFinals() && isModifier(field, FINAL)) {
-                    logger.log(Noisy, "Removing final modifier from field %s in class %s", field.getName(), cls.getName());
-                    field.setModifiers(field.getModifiers() - FINAL);
-                }
+            } else if (context.shouldIgnoreNonPublic() && !isModifier(field, PUBLIC)) {
+                logger.log(Noisy, "Removing non-public field %s from class %s", field.getName(), cls.getName());
+                cls.removeField(field);
             }
         }
     }

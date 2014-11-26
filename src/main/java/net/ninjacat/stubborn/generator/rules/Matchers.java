@@ -25,6 +25,7 @@ import net.ninjacat.stubborn.exceptions.TransformationException;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -36,12 +37,16 @@ public class Matchers {
     private final List<MethodMatcher> matchers;
     @XStreamImplicit(itemFieldName = "strip-class")
     private final List<String> stripClasses;
+    @XStreamImplicit(itemFieldName = "skip-class")
+    private final List<String> skipClasses;
 
     private List<Pattern> stripPatterns;
+    private List<Pattern> skipPatterns;
 
     public Matchers() {
         matchers = new ArrayList<>();
         stripClasses = new ArrayList<>();
+        skipClasses = new ArrayList<>();
     }
 
     public static Matchers loadFromStream(InputStream inputStream) {
@@ -55,6 +60,18 @@ public class Matchers {
             loadStripPatterns();
         }
         for (Pattern pattern : stripPatterns) {
+            if (pattern.matcher(className).matches()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean shouldSkipClass(CharSequence className) {
+        if (skipPatterns == null) {
+            loadSkipPatterns();
+        }
+        for (Pattern pattern : skipPatterns) {
             if (pattern.matcher(className).matches()) {
                 return true;
             }
@@ -84,14 +101,23 @@ public class Matchers {
         return matchers;
     }
 
-    private void loadStripPatterns() {
-        stripPatterns = new ArrayList<>();
+    private static void compilePatterns(Iterable<String> regexps, Collection<Pattern> result) {
         //noinspection ConstantConditions
-        if (stripClasses == null) {
+        if (regexps == null) {
             return;
         }
-        for (String classRegexp : stripClasses) {
-            stripPatterns.add(Pattern.compile(classRegexp));
+        for (String re : regexps) {
+            result.add(Pattern.compile(re));
         }
+    }
+
+    private void loadStripPatterns() {
+        stripPatterns = new ArrayList<>();
+        compilePatterns(stripClasses, stripPatterns);
+    }
+
+    private void loadSkipPatterns() {
+        skipPatterns = new ArrayList<>();
+        compilePatterns(skipClasses, skipPatterns);
     }
 }

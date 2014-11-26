@@ -106,12 +106,32 @@ You can also remove classes from the processed jar/folder. For this include regu
 </rules>
 ```
 
+If you do not want to transform a class, you can add a rule to skip it. For this include regular expressions to match fully qualified class names in the rules file as
+```
+<?xml version="1.0"?>
+<rules>
+    <skip-class>org\.good\..*</skip-class>
+    <skip-class>org\.useful\.LeaveIt</skip-class>
+    <methods>
+        .
+        .
+        .
+    </methods>
+</rules>
+```
+
+You can combine `skip-class` and `strip-class` rules, but remember that `skip-class` takes precedence over any other option.
+ 
+For transformation to work, all of the classes referenced in transformed code should be available on the classpath. Your 
+standard class path is included automatically, you can add additional folders and/or jar-files with `--classpath` option.
+
 There are several more command-line parameters which affect how resulting classes are generated:
 
 * `--strip-non-public` will remove all non-public methods and fields from the resulting class
 * `--strip-fields` will remove all fields from class
 * `--strip-final` will remove all final modifiers from classes and methods, so you can easily mock them with Mockito or similar tool
 * `--help` will display more detailed information on command-line parameters
+
 
 ### Authors ###
 

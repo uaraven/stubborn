@@ -10,7 +10,7 @@ import org.junit.Test;
 import java.lang.reflect.Method;
 
 /**
- * Sandbox for testing various possible replacements
+ * Not a unit tests per se, but a sandbox for testing various possible replacements
  */
 public class JavassistPoc {
 
@@ -20,7 +20,7 @@ public class JavassistPoc {
         CtClass cls = pool.get(Test1.class.getCanonicalName());
         CtMethod method = cls.getMethod("getPojo", "()Lnet/ninjacat/stubborn/test/Pojo;");
         method.setBody("return ($r)$type.newInstance();");
-        cls.setName("Test2");
+        cls.setName("TestPojo");
 
         Object instance = cls.toClass().getConstructor().newInstance();
 
@@ -28,5 +28,38 @@ public class JavassistPoc {
         Object pojo = getPojo.invoke(instance);
 
         Assert.assertNotNull("Should return instance of POJO", pojo);
+    }
+
+    @Test
+    public void shouldCorrectlyReplaceBooleanReturn() throws Exception {
+        ClassPool pool = new ClassPool(true);
+        CtClass cls = pool.get(Test1.class.getCanonicalName());
+        CtMethod method = cls.getMethod("getBool", "()Ljava/lang/Boolean;");
+        method.setBody("return new java.lang.Boolean(false);");
+    }
+
+
+    @Test
+    public void shouldCorrectlyReplaceIntegerReturn() throws Exception {
+        ClassPool pool = new ClassPool(true);
+        CtClass cls = pool.get(Test1.class.getCanonicalName());
+        CtMethod method = cls.getMethod("getInt", "()Ljava/lang/Integer;");
+        method.setBody("return new java.lang.Integer(0);");
+    }
+
+    @Test
+    public void shouldCorrectlyReplaceFloatReturn() throws Exception {
+        ClassPool pool = new ClassPool(true);
+        CtClass cls = pool.get(Test1.class.getCanonicalName());
+        CtMethod method = cls.getMethod("getFloat", "()Ljava/lang/Float;");
+        method.setBody("return new java.lang.Float(0f);");
+    }
+
+    @Test
+    public void shouldCorrectlyReplaceShortReturn() throws Exception {
+        ClassPool pool = new ClassPool(true);
+        CtClass cls = pool.get(Test1.class.getCanonicalName());
+        CtMethod method = cls.getMethod("getShort", "()Ljava/lang/Short;");
+        method.setBody("return new java.lang.Short((short)0);");
     }
 }

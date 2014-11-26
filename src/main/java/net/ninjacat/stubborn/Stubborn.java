@@ -80,6 +80,9 @@ public class Stubborn {
         Option stripFinals = OptionBuilder.withLongOpt("strip-final").
                 withDescription("Remove final modifier from methods and classes").
                 create('f');
+        Option generateInstances = OptionBuilder.withLongOpt("generate-instances").
+                withDescription("Generate return newInstanse() for reference return types").
+                create("g");
         Option verbose = OptionBuilder.withArgName("level").withLongOpt("verbose").
                 withDescription("Provide more output (-v 2 for even more output)").hasOptionalArg().withType(Integer.class).
                 create('v');
@@ -94,6 +97,7 @@ public class Stubborn {
         options.addOption(stripNonPublic);
         options.addOption(stripFields);
         options.addOption(stripFinals);
+        options.addOption(generateInstances);
         options.addOption(verbose);
         options.addOption(ignoreDupMatchers);
         options.addOption(help);

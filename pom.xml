@@ -55,19 +55,21 @@
         <commons-cli.version>1.2</commons-cli.version>
         <javassist.version>3.18.2-GA</javassist.version>
         <xstream.version>1.4.7</xstream.version>
+        <annotations.version>13.0</annotations.version>
+        <guice.version>3.0</guice.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>3.0</version>
+            <version>${guice.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-multibindings</artifactId>
-            <version>3.0</version>
+            <version>${guice.version}</version>
         </dependency>
 
         <dependency>
@@ -80,6 +82,12 @@
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
             <version>${javassist.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>${annotations.version}</version>
         </dependency>
 
         <dependency>
@@ -172,7 +180,7 @@
                     </plugin>
 
                     <plugin>
-                    <artifactId>maven-assembly-plugin</artifactId>
+                        <artifactId>maven-assembly-plugin</artifactId>
                         <configuration>
                             <archive>
                             </archive>

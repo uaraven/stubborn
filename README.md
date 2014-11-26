@@ -87,7 +87,13 @@ If method is matched by multiple rules, Stubborn will fail immediately and tell 
 
 If method is not matched by any rules its body will be replaced with `return null;` for all methods which return objects and with `return 0;` for all methods which return numbers.
 
-If no matching rules are supplied the default one will be used. It is actually the one shown in the example above. All methods which return `java.lang.String` will return empty string, other methods will be stubbed with default value (i.e. zero, null or false).
+If no matching rules are supplied the default one will be used. It is actually the one shown in the example above. 
+All methods which return `java.lang.String` will return empty string, other methods will be stubbed with default value (i.e. zero, null or false).
+
+This behavior can be changed with `--generate-instances` option. When this option is specified Stubborn will generate newInstance() call for
+ methods which return reference types. Such types must have public default constructor. If return type is a primitive wrapper, then correct
+ constructor call will be generated, for example `new java.lang.Float(0.0f)` for floats or `new java.lang.Boolean(false)` for booleans.
+
 
 You can also remove classes from the processed jar/folder. For this include regular expressions to match fully qualified class names in the rules file as
 ```

@@ -27,10 +27,11 @@ public class Context {
 
     private final boolean stripNonPublic;
     private final boolean stripFinals;
+    private final boolean stripFields;
+    private final ReturnObjects objectReturnStrategy;
     private final String sourceRoot;
     private final String outputRoot;
     private final String rules;
-    private final boolean stripFields;
     private final boolean ignoreDuplicateMatchers;
     private final int logLevel;
 
@@ -42,6 +43,7 @@ public class Context {
         this.stripFinals = commandLine.hasOption("strip-final");
         this.stripFields = commandLine.hasOption("strip-fields");
         this.ignoreDuplicateMatchers = commandLine.hasOption("ignore-duplicate-matchers");
+        this.objectReturnStrategy = commandLine.hasOption("return-instances") ? ReturnObjects.Instance : ReturnObjects.Nulls;
         int loggingLevel = commandLine.hasOption("v") ? 1 : 0;
         try {
             loggingLevel = Integer.valueOf(commandLine.getOptionValue("verbose"));
@@ -80,6 +82,10 @@ public class Context {
 
     public boolean shouldIgnoreDuplicateMatchers() {
         return ignoreDuplicateMatchers;
+    }
+
+    public ReturnObjects getObjectReturnStrategy() {
+        return objectReturnStrategy;
     }
 
     public int getLogLevel() {

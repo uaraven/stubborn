@@ -31,6 +31,22 @@ public class Test1 {
         return 1;
     }
 
+    public Float getFloat() {
+        return 1f;
+    }
+
+    public Short getShort() {
+        return 1;
+    }
+
+    public Boolean getBool() {
+        return true;
+    }
+
+    public long getLong() {
+        return 10l;
+    }
+
     public long add(int a, int b) {
         return a + b;
     }

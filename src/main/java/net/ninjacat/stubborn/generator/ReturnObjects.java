@@ -14,22 +14,9 @@
  *   limitations under the License.
  */
 
-package net.ninjacat.stubborn.config;
+package net.ninjacat.stubborn.generator;
 
-import com.google.inject.AbstractModule;
-import net.ninjacat.stubborn.generator.BodyGenerator;
-import net.ninjacat.stubborn.generator.Logger;
-import net.ninjacat.stubborn.generator.Transformer;
-import net.ninjacat.stubborn.generator.rules.RulesProvider;
-
-import javax.inject.Singleton;
-
-public class GeneratorModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(Logger.class);
-        bind(Transformer.class);
-        bind(BodyGenerator.class).in(Singleton.class);
-        bind(RulesProvider.class).in(Singleton.class);
-    }
+public enum ReturnObjects {
+    Nulls,
+    Instance;
 }

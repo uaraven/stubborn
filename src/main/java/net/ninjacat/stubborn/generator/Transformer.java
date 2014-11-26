@@ -38,12 +38,17 @@ public class Transformer {
 
     private final Map<ClassPathType, ClassAccessProvider> providers;
     private final RulesProvider rulesProvider;
+    private final BodyGenerator bodyGenerator;
     private final Logger logger;
 
     @Inject
-    public Transformer(Map<ClassPathType, ClassAccessProvider> providers, RulesProvider rulesProvider, Logger logger) {
+    public Transformer(Map<ClassPathType, ClassAccessProvider> providers,
+                       RulesProvider rulesProvider,
+                       BodyGenerator bodyGenerator,
+                       Logger logger) {
         this.providers = providers;
         this.rulesProvider = rulesProvider;
+        this.bodyGenerator = bodyGenerator;
         this.logger = logger;
     }
 
@@ -78,32 +83,6 @@ public class Transformer {
         }
         writer.close();
         logger.log(Default, "Done");
-    }
-
-    private static String injectMethodVariable(String methodBody, CtMethod method) {
-        String result = methodBody.replaceAll("\\$method", "\"" + method.getName() + "\"");
-        result = result.replaceAll("\\$sign", "\"" + method.getSignature() + "\"");
-        return result;
-    }
-
-    private static boolean isModifier(CtClass cls, int modifier) {
-        return (cls.getModifiers() & modifier) == modifier;
-    }
-
-    private static boolean isModifier(CtMember method, int modifier) {
-        return (method.getModifiers() & modifier) == modifier;
-    }
-
-    private static void storeClass(Writer writer, CtClass cls) throws IOException {
-        try {
-            writer.addClass(cls.getName(), cls.toBytecode());
-        } catch (CannotCompileException e) {
-            throw new TransformationException("Failed to create bytecode for " + cls.getName(), e);
-        }
-    }
-
-    private static void replaceMethodBody(CtMethod method, String methodBody) throws CannotCompileException {
-        method.setBody(methodBody);
     }
 
     private void transformClass(Context context, String className, ClassPool pool, Matchers rules, Writer writer) throws NotFoundException, IOException {
@@ -154,18 +133,33 @@ public class Transformer {
                 Optional<MethodMatcher> matcher = rules.findMatcher(method, context.shouldIgnoreDuplicateMatchers());
                 String methodBody = matcher.isPresent() ? matcher.get().getMethodBody() : null;
                 try {
-                    if (methodBody == null) {
-                        logger.log(Verbose, "Rewriting method %s in class %s with default body", method.getName(), cls.getName());
-                    } else {
-                        methodBody = injectMethodVariable(methodBody, method);
-                        logger.log(Verbose, "Rewriting method %s in class %s", method.getName(), cls.getName());
-                    }
+                    methodBody = bodyGenerator.alterBody(context, cls, method, methodBody);
                     replaceMethodBody(method, methodBody);
                 } catch (CannotCompileException e) {
                     throw new TransformationException(String.format("Cannot compile body for method %s. Source:\n%s", method.getLongName(), methodBody), e);
                 }
             }
         }
+    }
+
+    private boolean isModifier(CtClass cls, int modifier) {
+        return (cls.getModifiers() & modifier) == modifier;
+    }
+
+    private boolean isModifier(CtMember method, int modifier) {
+        return (method.getModifiers() & modifier) == modifier;
+    }
+
+    private void storeClass(Writer writer, CtClass cls) throws IOException {
+        try {
+            writer.addClass(cls.getName(), cls.toBytecode());
+        } catch (CannotCompileException e) {
+            throw new TransformationException("Failed to create bytecode for " + cls.getName(), e);
+        }
+    }
+
+    private void replaceMethodBody(CtMethod method, String methodBody) throws CannotCompileException {
+        method.setBody(methodBody);
     }
 
 }

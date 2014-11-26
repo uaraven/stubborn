@@ -18,6 +18,8 @@
 <rules>
     <strip-class>java.util.Date</strip-class>
     <strip-class>java.lang.CharSequence</strip-class>
+    <skip-class>java.sql.Date</skip-class>
+    <skip-class>java.lang.Compiler</skip-class>
     <methods>
         <method>
             <returntype>java.lang.String</returntype>

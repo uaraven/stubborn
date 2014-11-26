@@ -88,4 +88,26 @@ public class MatchersTest {
         assertFalse("Should not allow to strip unlisted class", matchers.shouldStripClass("java.sql.Date"));
     }
 
+    @Test
+    public void shouldLoadClassesToSkip() throws Exception {
+        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
+
+        assertTrue("Should load list of classes to skip", matchers.shouldSkipClass("java.sql.Date"));
+        assertTrue("Should load list of classes to skip", matchers.shouldSkipClass("java.lang.Compiler"));
+    }
+
+    @Test
+    public void shouldNotAllowToSkipClassesNotInRules() throws Exception {
+        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
+
+        assertFalse("Should not allow to skip unlisted class", matchers.shouldSkipClass("java.util.Date"));
+    }
+
+    @Test
+    public void shouldNotFailIfSkipRulesDoesNotContainClasses() throws Exception {
+        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/string-getter.xml"));
+
+        assertFalse("Should not allow to skip unlisted class", matchers.shouldStripClass("java.sql.Date"));
+    }
+
 }

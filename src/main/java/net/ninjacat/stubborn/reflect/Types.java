@@ -21,7 +21,7 @@ import javassist.CtClass;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Types {
+public final class Types {
 
     private static final Map<String, String> BOXED_TYPES = new HashMap<>();
 
@@ -34,6 +34,9 @@ public class Types {
         BOXED_TYPES.put(Float.class.getCanonicalName(), "0.0f");
         BOXED_TYPES.put(Double.class.getCanonicalName(), "0.0");
         BOXED_TYPES.put(Boolean.class.getCanonicalName(), "false");
+    }
+
+    private Types() {
     }
 
     public static boolean isBoxType(CtClass cls) {

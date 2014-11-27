@@ -63,32 +63,33 @@ public class Stubborn {
         formatter.printHelp("stubborn [OPTIONS] -s <source path> -o <output path>", options);
     }
 
+    @SuppressWarnings("AccessStaticViaInstance")
     private static Options createOptions() {
-        Option source = OptionBuilder.withArgName("path|jar").withLongOpt("source").hasArg().isRequired().
+        Option source = OptionBuilder.withArgName("path|jar").withLongOpt(Context.SOURCE).hasArg().isRequired().
                 withDescription("Source path. Might be folder on a file system or a jar-file").create('s');
-        Option output = OptionBuilder.withArgName("path|jar").withLongOpt("output").hasArg().isRequired().
+        Option output = OptionBuilder.withArgName("path|jar").withLongOpt(Context.OUTPUT).hasArg().isRequired().
                 withDescription("Folder for output. Transformed classes will be stored to this folder").create('o');
-        Option rules = OptionBuilder.withArgName("xml-file").withLongOpt("transform-rules").hasArg().
+        Option rules = OptionBuilder.withArgName("xml-file").withLongOpt(Context.TRANSFORM_RULES).hasArg().
                 withDescription("Transformation rules file. If not specified, then default-rules.xml in current directory will be used").
                 create('r');
-        Option stripNonPublic = OptionBuilder.withLongOpt("strip-non-public").
+        Option stripNonPublic = OptionBuilder.withLongOpt(Context.STRIP_NON_PUBLIC).
                 withDescription("Only stub public methods, non-public methods will be stripped from output classes").
                 create('n');
-        Option stripFields = OptionBuilder.withLongOpt("strip-fields").
+        Option stripFields = OptionBuilder.withLongOpt(Context.STRIP_FIELDS).
                 withDescription("Remove field definitions from classes").
                 create('m');
-        Option stripFinals = OptionBuilder.withLongOpt("strip-final").
+        Option stripFinals = OptionBuilder.withLongOpt(Context.STRIP_FINAL).
                 withDescription("Remove final modifier from methods and classes").
                 create('f');
-        Option generateInstances = OptionBuilder.withLongOpt("generate-instances").
+        Option generateInstances = OptionBuilder.withLongOpt(Context.GENERATE_INSTANCES).
                 withDescription("Generate return newInstanse() for reference return types").
                 create("g");
-        Option verbose = OptionBuilder.withArgName("level").withLongOpt("verbose").
+        Option verbose = OptionBuilder.withArgName("level").withLongOpt(Context.VERBOSE).
                 withDescription("Provide more output (-v 2 for even more output)").hasOptionalArg().withType(Integer.class).
                 create('v');
-        Option ignoreDupMatchers = OptionBuilder.withLongOpt("ignore-duplicate-matchers").
+        Option ignoreDupMatchers = OptionBuilder.withLongOpt(Context.IGNORE_DUPLICATE_MATCHERS).
                 withDescription("Ignore duplicate matchers, use first defined.").create('i');
-        Option classPath = OptionBuilder.withLongOpt("classpath").hasArg().
+        Option classPath = OptionBuilder.withLongOpt(Context.CLASSPATH).hasArg().
                 withDescription("Additional classpath to be used during transformation").create("c");
         Option help = new Option("h", "help", false, "Show this help message");
 

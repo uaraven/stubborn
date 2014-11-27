@@ -23,8 +23,18 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 public class Context {
-    private static final String DEFAULT_RULES_FILE = "/default-rules.xml";
+    public static final String SOURCE = "source";
+    public static final String OUTPUT = "output";
+    public static final String TRANSFORM_RULES = "transform-rules";
+    public static final String CLASSPATH = "classpath";
+    public static final String STRIP_NON_PUBLIC = "strip-non-public";
+    public static final String STRIP_FINAL = "strip-final";
+    public static final String STRIP_FIELDS = "strip-fields";
+    public static final String IGNORE_DUPLICATE_MATCHERS = "ignore-duplicate-matchers";
+    public static final String GENERATE_INSTANCES = "generate-instances";
+    public static final String VERBOSE = "verbose";
 
+    private static final String DEFAULT_RULES_FILE = "/default-rules.xml";
     private final boolean stripNonPublic;
     private final boolean stripFinals;
     private final boolean stripFields;
@@ -37,18 +47,18 @@ public class Context {
     private final int logLevel;
 
     public Context(CommandLine commandLine) {
-        sourceRoot = commandLine.getOptionValue("source");
-        outputRoot = commandLine.getOptionValue("output");
-        rules = commandLine.getOptionValue("transform-rules");
-        classPath = commandLine.hasOption("classpath") ? commandLine.getOptionValue("classpath") : "";
-        stripNonPublic = commandLine.hasOption("strip-non-public");
-        stripFinals = commandLine.hasOption("strip-final");
-        stripFields = commandLine.hasOption("strip-fields");
-        ignoreDuplicateMatchers = commandLine.hasOption("ignore-duplicate-matchers");
-        objectReturnStrategy = commandLine.hasOption("generate-instances") ? ReturnObjects.Instance : ReturnObjects.Nulls;
-        int loggingLevel = commandLine.hasOption("v") ? 1 : 0;
+        sourceRoot = commandLine.getOptionValue(SOURCE);
+        outputRoot = commandLine.getOptionValue(OUTPUT);
+        rules = commandLine.getOptionValue(TRANSFORM_RULES);
+        classPath = commandLine.hasOption(CLASSPATH) ? commandLine.getOptionValue(CLASSPATH) : "";
+        stripNonPublic = commandLine.hasOption(STRIP_NON_PUBLIC);
+        stripFinals = commandLine.hasOption(STRIP_FINAL);
+        stripFields = commandLine.hasOption(STRIP_FIELDS);
+        ignoreDuplicateMatchers = commandLine.hasOption(IGNORE_DUPLICATE_MATCHERS);
+        objectReturnStrategy = commandLine.hasOption(GENERATE_INSTANCES) ? ReturnObjects.Instance : ReturnObjects.Nulls;
+        int loggingLevel = commandLine.hasOption(VERBOSE) ? 1 : 0;
         try {
-            loggingLevel = Integer.valueOf(commandLine.getOptionValue("verbose"));
+            loggingLevel = Integer.valueOf(commandLine.getOptionValue(VERBOSE));
         } catch (Exception ignored) {
         }
         logLevel = loggingLevel;

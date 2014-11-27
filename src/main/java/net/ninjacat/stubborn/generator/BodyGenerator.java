@@ -29,6 +29,8 @@ import static net.ninjacat.stubborn.generator.LogLevel.Verbose;
 
 public class BodyGenerator {
 
+    public static final String SIGNATURE_PLACEHOLDER = "\\$sign";
+    public static final String METHOD_NAME_PLACEHOLDER = "\\$method";
     private final Logger logger;
 
     @Inject
@@ -52,8 +54,8 @@ public class BodyGenerator {
     }
 
     private static String injectMethodVariable(String methodBody, CtMethod method) {
-        String result = methodBody.replaceAll("\\$method", "\"" + method.getName() + "\"");
-        result = result.replaceAll("\\$sign", "\"" + method.getSignature() + "\"");
+        String result = methodBody.replaceAll(METHOD_NAME_PLACEHOLDER, "\"" + method.getName() + "\"");
+        result = result.replaceAll(SIGNATURE_PLACEHOLDER, "\"" + method.getSignature() + "\"");
         return result;
     }
 

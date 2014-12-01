@@ -31,8 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static javassist.Modifier.FINAL;
-import static javassist.Modifier.PUBLIC;
+import static javassist.Modifier.*;
 import static net.ninjacat.stubborn.generator.LogLevel.*;
 
 public class Transformer {
@@ -118,6 +117,11 @@ public class Transformer {
         }
     }
 
+    private static boolean isNonModifiableMethod(CtMember method) {
+        int modifiers = method.getModifiers();
+        return isAbstract(modifiers) || isNative(modifiers);
+    }
+
     private void injectJavassistRuntime(ClassPool pool, Writer writer) throws NotFoundException, IOException {
         logger.log(Verbose, "Injecting javassist runtime");
         CtClass javassistDesc = pool.get(Desc.class.getCanonicalName());
@@ -126,13 +130,16 @@ public class Transformer {
 
     private void transformClass(Context context, String className, ClassPool pool, Matchers rules, Writer writer) throws NotFoundException, IOException {
         CtClass cls = pool.get(className);
-        if (rules.shouldSkipClass(className)) {
-            logger.log(Verbose, "Skipping class %s", className);
-            storeClass(writer, cls);
+        if (rules.shouldSkipClass(cls.getName())) {
+            writeUnchanged("class", writer, cls);
             return;
         }
         if (rules.shouldStripClass(className)) {
             logger.log(Verbose, "Stripping class %s", className);
+            return;
+        }
+        if (cls.isInterface()) {
+            writeUnchanged("interface", writer, cls);
             return;
         }
         if (context.shouldIgnoreNonPublic() && !isModifier(cls, PUBLIC)) {
@@ -143,9 +150,14 @@ public class Transformer {
             logger.log(Verbose, "Stripping final modifier from class %s", className);
             cls.setModifiers(cls.getModifiers() - FINAL);
         }
-        transformConstructors(context, rules, cls);
+        transformConstructors(context, cls);
         transformMethods(context, rules, cls);
         transformFields(context, cls);
+        storeClass(writer, cls);
+    }
+
+    private void writeUnchanged(String item, Writer writer, CtClass cls) throws IOException {
+        logger.log(Verbose, "Skipping %s %s", item, cls.getName());
         storeClass(writer, cls);
     }
 
@@ -161,27 +173,34 @@ public class Transformer {
         }
     }
 
-    private void transformConstructors(Context context, Matchers rules, CtClass cls) throws NotFoundException {
-        for (CtConstructor constructor : cls.getConstructors()) {
+    private void transformConstructors(Context context, CtClass cls) throws NotFoundException {
+        for (CtConstructor constructor : cls.getDeclaredConstructors()) {
             if (context.shouldIgnoreNonPublic() && !isModifier(constructor, PUBLIC)) {
-                logger.log(Noisy, "Removing constructor %s from class %s", constructor.getName(), cls.getName());
+                logger.log(Noisy, "Deleting constructor %s from class %s", constructor.getName(), cls.getName());
                 cls.removeConstructor(constructor);
             } else {
-                logger.log(Noisy, "Removing class %s constructor %s body", cls.getName(), constructor.getSignature());
-                replaceMethodBody(constructor, null);
+                logger.log(Noisy, "Removing constructor %s body from %s ", constructor.getSignature(), cls.getName());
+                try {
+                    replaceMethodBody(constructor, null);
+                } catch (Exception ignored) {
+                    logger.log(Default, "Failed to replace body of %s constructor in %s", constructor.getSignature(), cls.getName());
+                }
             }
         }
     }
 
     private void transformMethods(Context context, Matchers rules, CtClass cls) throws NotFoundException {
         for (CtMethod method : cls.getDeclaredMethods()) {
-            if (context.shouldStripFinals() && isModifier(method, FINAL)) {
+            if (context.shouldStripFinals() && isModifier(method, FINAL) && !isNative(method.getModifiers())) {
                 logger.log(Noisy, "Removing final modifier from method %s in class %s", method.getName(), cls.getName());
                 method.setModifiers(method.getModifiers() - FINAL);
             }
             if (context.shouldIgnoreNonPublic() && !isModifier(method, PUBLIC)) {
                 logger.log(Noisy, "Removing method %s from class %s", method.getName(), cls.getName());
                 cls.removeMethod(method);
+            }
+            if (isNonModifiableMethod(method)) {
+                logger.log(Noisy, "Skipping unmodifiable method %s in class %s", method.getName(), cls.getName());
             } else {
                 Optional<MethodMatcher> matcher = rules.findMatcher(method, context.shouldIgnoreDuplicateMatchers());
                 String methodBody = matcher.isPresent() ? matcher.get().getMethodBody() : null;

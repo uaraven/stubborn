@@ -84,6 +84,10 @@ public class Stubborn {
         Option generateInstances = OptionBuilder.withLongOpt(Context.GENERATE_INSTANCES).
                 withDescription("Generate return newInstanse() for reference return types").
                 create("g");
+        Option targetVersion = OptionBuilder.withArgName("version").withLongOpt(Context.TARGET_VERSION).
+                withDescription("Generate class files with specified target Java version").hasOptionalArg().withType(Integer.class).
+                create('t');
+
         Option verbose = OptionBuilder.withArgName("level").withLongOpt(Context.VERBOSE).
                 withDescription("Provide more output (-v 2 for even more output)").hasOptionalArg().withType(Integer.class).
                 create('v');
@@ -105,6 +109,7 @@ public class Stubborn {
         options.addOption(ignoreDupMatchers);
         options.addOption(classPath);
         options.addOption(help);
+        options.addOption(targetVersion);
 
         return options;
     }

@@ -132,6 +132,12 @@ standard class path is included automatically, you can add additional folders an
 There is currently no way to tweak constructor stubbing. Mostly constructors have their bodies removed, if it fails for
 any reason, then such constructor is left as is.
 
+By default class version is not changed, but you can set new version for a generated classes with `--target X`, where
+X is major Java version, i.e. 1, 2, 3, ... 8. 
+
+No verification is done, so if the code uses StringBuilder class and you set version to 4, you will most likely get 
+compilation errors. 
+
 There are several more command-line parameters which affect how resulting classes are generated:
 
 * `--strip-non-public` will remove all non-public methods and fields from the resulting class

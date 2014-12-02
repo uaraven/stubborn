@@ -16,11 +16,14 @@
 
 package net.ninjacat.stubborn.generator;
 
+import javassist.bytecode.ClassFile;
 import org.apache.commons.cli.CommandLine;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Context {
     public static final String SOURCE = "source";
@@ -32,7 +35,21 @@ public class Context {
     public static final String STRIP_FIELDS = "strip-fields";
     public static final String IGNORE_DUPLICATE_MATCHERS = "ignore-duplicate-matchers";
     public static final String GENERATE_INSTANCES = "generate-instances";
+    public static final String TARGET_VERSION = "target";
     public static final String VERBOSE = "verbose";
+
+    private static final Map<Integer, Integer> TARGET_VERSION_MAP = new HashMap<>();
+
+    static {
+        TARGET_VERSION_MAP.put(1, ClassFile.JAVA_1);
+        TARGET_VERSION_MAP.put(2, ClassFile.JAVA_2);
+        TARGET_VERSION_MAP.put(3, ClassFile.JAVA_3);
+        TARGET_VERSION_MAP.put(4, ClassFile.JAVA_4);
+        TARGET_VERSION_MAP.put(5, ClassFile.JAVA_5);
+        TARGET_VERSION_MAP.put(6, ClassFile.JAVA_6);
+        TARGET_VERSION_MAP.put(7, ClassFile.JAVA_7);
+        TARGET_VERSION_MAP.put(8, ClassFile.JAVA_8);
+    }
 
     private static final String DEFAULT_RULES_FILE = "/default-rules.xml";
     private final boolean stripNonPublic;
@@ -45,6 +62,7 @@ public class Context {
     private final String classPath;
     private final boolean ignoreDuplicateMatchers;
     private final int logLevel;
+    private final int target;
 
     public Context(CommandLine commandLine) {
         sourceRoot = commandLine.getOptionValue(SOURCE);
@@ -56,11 +74,16 @@ public class Context {
         stripFields = commandLine.hasOption(STRIP_FIELDS);
         ignoreDuplicateMatchers = commandLine.hasOption(IGNORE_DUPLICATE_MATCHERS);
         objectReturnStrategy = commandLine.hasOption(GENERATE_INSTANCES) ? ReturnObjects.Instance : ReturnObjects.Nulls;
-        int loggingLevel = commandLine.hasOption(VERBOSE) ? 1 : 0;
-        try {
-            loggingLevel = Integer.valueOf(commandLine.getOptionValue(VERBOSE));
-        } catch (Exception ignored) {
+
+        int targetVersion = commandLine.hasOption(TARGET_VERSION) ? tryParseInt(commandLine.getOptionValue(TARGET_VERSION), 0) : 0;
+        if (TARGET_VERSION_MAP.containsKey(targetVersion)) {
+            target = TARGET_VERSION_MAP.get(targetVersion);
+        } else {
+            target = 0;
         }
+
+        int loggingLevel = commandLine.hasOption(VERBOSE) ? 1 : 0;
+        loggingLevel = tryParseInt(commandLine.getOptionValue(VERBOSE), loggingLevel);
         logLevel = loggingLevel;
     }
 
@@ -110,5 +133,17 @@ public class Context {
 
     public int getLogLevel() {
         return logLevel;
+    }
+
+    public int getTargetVersion() {
+        return target;
+    }
+
+    private int tryParseInt(String optionValue, int defaultVersion) {
+        try {
+            return Integer.parseInt(optionValue);
+        } catch (NumberFormatException ignored) {
+            return defaultVersion;
+        }
     }
 }

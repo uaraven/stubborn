@@ -55,7 +55,7 @@ public class Transformer {
     public void transform(Context context) {
         logger.init(context);
 
-        ClassPool pool = new ClassPool(true);
+        ClassPool pool = new ClassPool(false);
         Source source = new Source(context);
         ClassLister reader = providers.get(source.getType()).getReader(source.getRoot());
         Writer writer = providers.get(source.getOutputType()).getWriter(context.getOutputRoot());
@@ -72,8 +72,13 @@ public class Transformer {
         } catch (NotFoundException e) {
             throw new TransformationException("Failed to load source classes from " + source.getRoot(), e);
         }
-
+        pool.appendSystemPath();
         logger.log(Default, "Classes to process: %d", classList.size());
+
+        if (context.getTargetVersion() > 0) {
+            logger.log(Verbose, "Using %s as class file version", context.getTargetVersion());
+        }
+
         for (String className : classList) {
             try {
                 transformClass(context, className, pool, rules, writer);
@@ -83,7 +88,7 @@ public class Transformer {
         }
 
         try {
-            injectJavassistRuntime(pool, writer);
+            injectJavassistRuntime(context, pool, writer);
         } catch (NotFoundException | IOException ignored) {
             logger.log(Default, "Failed to inject required javassist runtime class, results may be not usable");
         }
@@ -101,8 +106,11 @@ public class Transformer {
         return (method.getModifiers() & modifier) == modifier;
     }
 
-    private static void storeClass(Writer writer, CtClass cls) throws IOException {
+    private static void storeClass(Context context, Writer writer, CtClass cls) throws IOException {
         try {
+            if (context.getTargetVersion() > 0) {
+                cls.getClassFile().setMajorVersion(context.getTargetVersion());
+            }
             writer.addClass(cls.getName(), cls.toBytecode());
         } catch (CannotCompileException e) {
             throw new TransformationException("Failed to create bytecode for " + cls.getName(), e);
@@ -122,16 +130,16 @@ public class Transformer {
         return isAbstract(modifiers) || isNative(modifiers);
     }
 
-    private void injectJavassistRuntime(ClassPool pool, Writer writer) throws NotFoundException, IOException {
+    private void injectJavassistRuntime(Context context, ClassPool pool, Writer writer) throws NotFoundException, IOException {
         logger.log(Verbose, "Injecting javassist runtime");
         CtClass javassistDesc = pool.get(Desc.class.getCanonicalName());
-        storeClass(writer, javassistDesc);
+        storeClass(context, writer, javassistDesc);
     }
 
     private void transformClass(Context context, String className, ClassPool pool, TransformRules rules, Writer writer) throws NotFoundException, IOException {
         CtClass cls = pool.get(className);
         if (rules.shouldSkipClass(className)) {
-            writeUnchanged("class", writer, cls);
+            writeUnchanged(context, "class", writer, cls);
             return;
         }
         if (rules.shouldStripClass(className)) {
@@ -139,7 +147,7 @@ public class Transformer {
             return;
         }
         if (cls.isInterface()) {
-            writeUnchanged("interface", writer, cls);
+            writeUnchanged(context, "interface", writer, cls);
             return;
         }
         if (context.shouldIgnoreNonPublic() && !isModifier(cls, PUBLIC)) {
@@ -153,12 +161,12 @@ public class Transformer {
         transformConstructors(context, cls);
         transformMethods(context, rules, cls);
         transformFields(context, cls);
-        storeClass(writer, cls);
+        storeClass(context, writer, cls);
     }
 
-    private void writeUnchanged(String item, Writer writer, CtClass cls) throws IOException {
+    private void writeUnchanged(Context context, String item, Writer writer, CtClass cls) throws IOException {
         logger.log(Verbose, "Skipping %s %s", item, cls.getName());
-        storeClass(writer, cls);
+        storeClass(context, writer, cls);
     }
 
     private void transformFields(Context context, CtClass cls) throws NotFoundException {

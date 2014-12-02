@@ -20,9 +20,9 @@ import javassist.*;
 import javassist.runtime.Desc;
 import net.ninjacat.stubborn.exceptions.TransformationException;
 import net.ninjacat.stubborn.file.*;
-import net.ninjacat.stubborn.generator.rules.Matchers;
 import net.ninjacat.stubborn.generator.rules.MethodMatcher;
 import net.ninjacat.stubborn.generator.rules.RulesProvider;
+import net.ninjacat.stubborn.generator.rules.TransformRules;
 
 import javax.inject.Inject;
 import java.io.FileNotFoundException;
@@ -61,7 +61,7 @@ public class Transformer {
         Writer writer = providers.get(source.getOutputType()).getWriter(context.getOutputRoot());
         List<String> classList = reader.list();
 
-        Matchers rules = getMatchers(context);
+        TransformRules rules = getMatchers(context);
         try {
             pool.appendClassPath(source.getRoot());
             logger.log(Noisy, "Using %s as source", context.getSourceRoot());
@@ -128,9 +128,9 @@ public class Transformer {
         storeClass(writer, javassistDesc);
     }
 
-    private void transformClass(Context context, String className, ClassPool pool, Matchers rules, Writer writer) throws NotFoundException, IOException {
+    private void transformClass(Context context, String className, ClassPool pool, TransformRules rules, Writer writer) throws NotFoundException, IOException {
         CtClass cls = pool.get(className);
-        if (rules.shouldSkipClass(cls.getName())) {
+        if (rules.shouldSkipClass(className)) {
             writeUnchanged("class", writer, cls);
             return;
         }
@@ -189,7 +189,7 @@ public class Transformer {
         }
     }
 
-    private void transformMethods(Context context, Matchers rules, CtClass cls) throws NotFoundException {
+    private void transformMethods(Context context, TransformRules rules, CtClass cls) throws NotFoundException {
         for (CtMethod method : cls.getDeclaredMethods()) {
             if (context.shouldStripFinals() && isModifier(method, FINAL) && !isNative(method.getModifiers())) {
                 logger.log(Noisy, "Removing final modifier from method %s in class %s", method.getName(), cls.getName());
@@ -210,8 +210,8 @@ public class Transformer {
         }
     }
 
-    private Matchers getMatchers(Context context) {
-        Matchers rules;
+    private TransformRules getMatchers(Context context) {
+        TransformRules rules;
         try {
             rules = rulesProvider.getMatchers(context.getRulesStream());
             logger.log(Noisy, "Loaded rules from %s", context.getRulesFile() == null ? "defaults" : context.getRulesFile());

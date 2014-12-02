@@ -26,36 +26,36 @@ import java.util.Optional;
 import static net.ninjacat.stubborn.generator.rules.ClassFixtures.getMethod;
 import static org.junit.Assert.*;
 
-public class MatchersTest {
+public class TransformRulesTest {
 
     @Test
     public void shouldFindStringGetter() throws Exception {
-        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/string-getter.xml"));
+        TransformRules transformRules = TransformRules.loadFromStream(getClass().getResourceAsStream("/string-getter.xml"));
 
         CtMethod getString = getMethod(Test1.class, "getString");
 
-        Optional<MethodMatcher> matcher = matchers.findMatcher(getString, false);
+        Optional<MethodMatcher> matcher = transformRules.findMatcher(getString, false);
 
         assertTrue("Should find exactly one matcher", matcher.isPresent());
     }
 
     @Test(expected = IllegalStateException.class)
     public void shouldFailWithDuplicateGetters() throws Exception {
-        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/duplicate-getter.xml"));
+        TransformRules transformRules = TransformRules.loadFromStream(getClass().getResourceAsStream("/duplicate-getter.xml"));
 
         CtMethod getString = getMethod(Test1.class, "getString");
 
-        matchers.findMatcher(getString, false);
+        transformRules.findMatcher(getString, false);
     }
 
 
     @Test
     public void shouldSelectFirstMatcherFromDuplicate() throws Exception {
-        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/duplicate-getter.xml"));
+        TransformRules transformRules = TransformRules.loadFromStream(getClass().getResourceAsStream("/duplicate-getter.xml"));
 
         CtMethod getString = getMethod(Test1.class, "getString");
 
-        Optional<MethodMatcher> matcher = matchers.findMatcher(getString, true);
+        Optional<MethodMatcher> matcher = transformRules.findMatcher(getString, true);
 
         assertTrue("Should find exactly one matcher", matcher.isPresent());
         assertEquals("Should select first matcher", matcher.get().getMethodBody(), "return \"get-string\";");
@@ -63,51 +63,50 @@ public class MatchersTest {
 
     @Test(expected = TransformationException.class)
     public void shouldFailWhenLoading() throws Exception {
-        Matchers.loadFromStream(getClass().getResourceAsStream("/no-conditions-matcher.xml"));
+        TransformRules.loadFromStream(getClass().getResourceAsStream("/no-conditions-matcher.xml"));
     }
 
     @Test
     public void shouldLoadClassesToStrip() throws Exception {
-        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
+        TransformRules transformRules = TransformRules.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
 
-        assertTrue("Should load list of classes to strip", matchers.shouldStripClass("java.util.Date"));
-        assertTrue("Should load list of classes to strip", matchers.shouldStripClass("java.lang.CharSequence"));
+        assertTrue("Should load list of classes to strip", transformRules.shouldStripClass("java.util.Date"));
+        assertTrue("Should load list of classes to strip", transformRules.shouldStripClass("java.lang.CharSequence"));
     }
 
     @Test
     public void shouldNotAllowToStripClassesNotInRules() throws Exception {
-        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
+        TransformRules transformRules = TransformRules.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
 
-        assertFalse("Should not allow to strip unlisted class", matchers.shouldStripClass("java.sql.Date"));
+        assertFalse("Should not allow to strip unlisted class", transformRules.shouldStripClass("java.sql.Date"));
     }
 
     @Test
     public void shouldNotFailIfRulesDoesNotContainClasses() throws Exception {
-        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/string-getter.xml"));
+        TransformRules transformRules = TransformRules.loadFromStream(getClass().getResourceAsStream("/string-getter.xml"));
 
-        assertFalse("Should not allow to strip unlisted class", matchers.shouldStripClass("java.sql.Date"));
+        assertFalse("Should not allow to strip unlisted class", transformRules.shouldStripClass("java.sql.Date"));
     }
 
     @Test
     public void shouldLoadClassesToSkip() throws Exception {
-        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
+        TransformRules transformRules = TransformRules.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
 
-        assertTrue("Should load list of classes to skip", matchers.shouldSkipClass("java.sql.Date"));
-        assertTrue("Should load list of classes to skip", matchers.shouldSkipClass("java.lang.Compiler"));
+        assertTrue("Should load list of classes to skip", transformRules.shouldSkipClass("java.sql.Date"));
+        assertTrue("Should load list of classes to skip", transformRules.shouldSkipClass("java.lang.Compiler"));
     }
 
     @Test
     public void shouldNotAllowToSkipClassesNotInRules() throws Exception {
-        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
+        TransformRules transformRules = TransformRules.loadFromStream(getClass().getResourceAsStream("/strip-class-getter.xml"));
 
-        assertFalse("Should not allow to skip unlisted class", matchers.shouldSkipClass("java.util.Date"));
+        assertFalse("Should not allow to skip unlisted class", transformRules.shouldSkipClass("java.util.Date"));
     }
 
     @Test
     public void shouldNotFailIfSkipRulesDoesNotContainClasses() throws Exception {
-        Matchers matchers = Matchers.loadFromStream(getClass().getResourceAsStream("/string-getter.xml"));
+        TransformRules rules = TransformRules.loadFromStream(getClass().getResourceAsStream("/string-getter.xml"));
 
-        assertFalse("Should not allow to skip unlisted class", matchers.shouldStripClass("java.sql.Date"));
+        assertFalse("Should not allow to skip unlisted class", rules.shouldStripClass("java.sql.Date"));
     }
-
 }

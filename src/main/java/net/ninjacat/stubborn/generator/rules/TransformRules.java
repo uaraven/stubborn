@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @XStreamAlias("rules")
-public class Matchers {
+public class TransformRules {
     @XStreamAlias("methods")
     private final List<MethodMatcher> matchers;
     @XStreamImplicit(itemFieldName = "strip-class")
@@ -43,16 +43,16 @@ public class Matchers {
     private List<Pattern> stripPatterns;
     private List<Pattern> skipPatterns;
 
-    public Matchers() {
+    public TransformRules() {
         matchers = new ArrayList<>();
         stripClasses = new ArrayList<>();
         skipClasses = new ArrayList<>();
     }
 
-    public static Matchers loadFromStream(InputStream inputStream) {
+    public static TransformRules loadFromStream(InputStream inputStream) {
         XStream stream = new XStream();
-        stream.processAnnotations(new Class[]{Matchers.class, MethodMatcher.class});
-        return verify((Matchers) stream.fromXML(inputStream));
+        stream.processAnnotations(new Class[]{TransformRules.class, MethodMatcher.class});
+        return verify((TransformRules) stream.fromXML(inputStream));
     }
 
     public boolean shouldStripClass(CharSequence className) {
@@ -92,13 +92,13 @@ public class Matchers {
         }
     }
 
-    private static Matchers verify(Matchers matchers) {
-        for (MethodMatcher mm : matchers.matchers) {
+    private static TransformRules verify(TransformRules transformRules) {
+        for (MethodMatcher mm : transformRules.matchers) {
             if (mm.isMissingConditions()) {
                 throw new TransformationException("Matcher with no conditions: " + mm);
             }
         }
-        return matchers;
+        return transformRules;
     }
 
     private static void compilePatterns(Iterable<String> regexps, Collection<Pattern> result) {

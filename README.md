@@ -6,8 +6,6 @@
 
 Stubborn is a command-line utility that cripples perfect Java classes into shadows of their former selves with stubbed methods. Might be useful for testing.
 
-Current version is 0.1 and development is ongoing.
-
 #### Longer Version ####
 
 You know that feeling when you're writing unit tests and it comes down to a part of code which is calling
@@ -128,6 +126,11 @@ You can combine `skip-class` and `strip-class` rules, but remember that `skip-cl
  
 For transformation to work, all of the classes referenced in transformed code should be available on the classpath. Your 
 standard class path is included automatically, you can add additional folders and/or jar-files with `--classpath` option.
+
+#### Hidden stuff ####
+
+There is currently no way to tweak constructor stubbing. Mostly constructors have their bodies removed, if it fails for
+any reason, then such constructor is left as is.
 
 There are several more command-line parameters which affect how resulting classes are generated:
 

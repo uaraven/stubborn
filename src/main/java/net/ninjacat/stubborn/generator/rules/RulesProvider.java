@@ -20,7 +20,7 @@ import java.io.InputStream;
 
 public class RulesProvider {
 
-    public Matchers getMatchers(InputStream stream) {
-        return Matchers.loadFromStream(stream);
+    public TransformRules getMatchers(InputStream stream) {
+        return TransformRules.loadFromStream(stream);
     }
 }

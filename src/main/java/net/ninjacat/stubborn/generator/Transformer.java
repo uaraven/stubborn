@@ -27,9 +27,7 @@ import net.ninjacat.stubborn.generator.rules.TransformRules;
 import javax.inject.Inject;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static javassist.Modifier.*;
 import static net.ninjacat.stubborn.generator.LogLevel.*;
@@ -46,7 +44,7 @@ public class Transformer {
                        RulesProvider rulesProvider,
                        BodyGenerator bodyGenerator,
                        Logger logger) {
-        this.providers = providers;
+        this.providers = Collections.unmodifiableMap(providers);
         this.rulesProvider = rulesProvider;
         this.bodyGenerator = bodyGenerator;
         this.logger = logger;
@@ -56,29 +54,22 @@ public class Transformer {
         logger.init(context);
 
         ClassPool pool = new ClassPool(false);
-        Source source = new Source(context);
-        ClassLister reader = providers.get(source.getType()).getReader(source.getRoot());
-        Writer writer = providers.get(source.getOutputType()).getWriter(context.getOutputRoot());
-        List<String> classList = reader.list();
 
-        TransformRules rules = getMatchers(context);
-        try {
-            pool.appendClassPath(source.getRoot());
-            logger.log(Noisy, "Using %s as source", context.getSourceRoot());
-            if (context.hasClassPath()) {
-                logger.log(Noisy, "Adding %s as additional classpath", context.getClassPath());
-                pool.appendPathList(context.getClassPath());
-            }
-        } catch (NotFoundException e) {
-            throw new TransformationException("Failed to load source classes from " + source.getRoot(), e);
-        }
+        List<Source> sources = context.getSources();
+        List<String> classList = getInputClassList(sources);
+        Writer writer = providers.get(context.getOutputType()).getWriter(context.getOutputRoot());
+
+        addSourceClassPaths(context, pool, sources);
+        addExtraClassPath(context, pool);
         pool.appendSystemPath();
+
         logger.log(Default, "Classes to process: %d", classList.size());
 
         if (context.getTargetVersion() > 0) {
             logger.log(Verbose, "Using %s as class file version", context.getTargetVersion());
         }
 
+        TransformRules rules = getMatchers(context);
         for (String className : classList) {
             try {
                 transformClass(context, className, pool, rules, writer);
@@ -130,6 +121,37 @@ public class Transformer {
         return isAbstract(modifiers) || isNative(modifiers);
     }
 
+    private void addSourceClassPaths(Context context, ClassPool pool, List<Source> sources) {
+        for (Source source : sources) {
+            try {
+                pool.appendClassPath(source.getRoot());
+                logger.log(Noisy, "Using %s as source", context.getSourceRoot());
+            } catch (NotFoundException e) {
+                throw new TransformationException("Failed to load source classes from " + source.getRoot(), e);
+            }
+        }
+    }
+
+    private void addExtraClassPath(Context context, ClassPool pool) {
+        if (context.hasClassPath()) {
+            logger.log(Noisy, "Adding %s as additional classpath", context.getClassPath());
+            try {
+                pool.appendPathList(context.getClassPath());
+            } catch (NotFoundException e) {
+                throw new TransformationException("Failed to load source classes from " + context.getClassPath(), e);
+            }
+        }
+    }
+
+    private List<String> getInputClassList(List<Source> sources) {
+        List<String> classes = new ArrayList<>();
+        for (Source source : sources) {
+            ClassLister reader = providers.get(source.getType()).getReader(source.getRoot());
+            classes.addAll(reader.list());
+        }
+        return classes;
+    }
+
     private void injectJavassistRuntime(Context context, ClassPool pool, Writer writer) throws NotFoundException, IOException {
         logger.log(Verbose, "Injecting javassist runtime");
         CtClass javassistDesc = pool.get(Desc.class.getCanonicalName());
@@ -138,6 +160,10 @@ public class Transformer {
 
     private void transformClass(Context context, String className, ClassPool pool, TransformRules rules, Writer writer) throws NotFoundException, IOException {
         CtClass cls = pool.get(className);
+        if (cls.isFrozen()) {
+            logger.log(Verbose, "Stripping frozen class %s", className);
+            return;
+        }
         if (rules.shouldSkipClass(className)) {
             writeUnchanged(context, "class", writer, cls);
             return;

@@ -65,7 +65,7 @@ public class Stubborn {
 
     @SuppressWarnings("AccessStaticViaInstance")
     private static Options createOptions() {
-        Option source = OptionBuilder.withArgName("path|jar").withLongOpt(Context.SOURCE).hasArg().isRequired().
+        Option source = OptionBuilder.withArgName("path|jar").withLongOpt(Context.SOURCE).hasArgs().isRequired().
                 withDescription("Source path. Might be folder on a file system or a jar-file").create('s');
         Option output = OptionBuilder.withArgName("path|jar").withLongOpt(Context.OUTPUT).hasArg().isRequired().
                 withDescription("Folder for output. Transformed classes will be stored to this folder").create('o');

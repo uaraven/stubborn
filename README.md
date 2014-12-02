@@ -127,7 +127,7 @@ You can combine `skip-class` and `strip-class` rules, but remember that `skip-cl
 For transformation to work, all of the classes referenced in transformed code should be available on the classpath. Your 
 standard class path is included automatically, you can add additional folders and/or jar-files with `--classpath` option.
 
-#### Hidden stuff ####
+#### Behavior modifications ####
 
 There is currently no way to tweak constructor stubbing. Mostly constructors have their bodies removed, if it fails for
 any reason, then such constructor is left as is.
@@ -144,7 +144,6 @@ There are several more command-line parameters which affect how resulting classe
 * `--strip-fields` will remove all fields from class
 * `--strip-final` will remove all final modifiers from classes and methods, so you can easily mock them with Mockito or similar tool
 * `--help` will display more detailed information on command-line parameters
-
 
 ### Authors ###
 

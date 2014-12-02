@@ -17,13 +17,21 @@
 package net.ninjacat.stubborn.generator;
 
 import javassist.bytecode.ClassFile;
+import net.ninjacat.stubborn.file.ClassPathType;
+import net.ninjacat.stubborn.file.Source;
 import org.apache.commons.cli.CommandLine;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
+import static net.ninjacat.stubborn.file.ClassPathType.Folder;
+import static net.ninjacat.stubborn.file.ClassPathType.Jar;
 
 public class Context {
     public static final String SOURCE = "source";
@@ -37,7 +45,7 @@ public class Context {
     public static final String GENERATE_INSTANCES = "generate-instances";
     public static final String TARGET_VERSION = "target";
     public static final String VERBOSE = "verbose";
-
+    private static final String JAR = ".jar";
     private static final Map<Integer, Integer> TARGET_VERSION_MAP = new HashMap<>();
 
     static {
@@ -56,7 +64,7 @@ public class Context {
     private final boolean stripFinals;
     private final boolean stripFields;
     private final ReturnObjects objectReturnStrategy;
-    private final String sourceRoot;
+    private final String[] sourceRoot;
     private final String outputRoot;
     private final String rules;
     private final String classPath;
@@ -65,7 +73,7 @@ public class Context {
     private final int target;
 
     public Context(CommandLine commandLine) {
-        sourceRoot = commandLine.getOptionValue(SOURCE);
+        sourceRoot = commandLine.getOptionValues(SOURCE);
         outputRoot = commandLine.getOptionValue(OUTPUT);
         rules = commandLine.getOptionValue(TRANSFORM_RULES);
         classPath = commandLine.hasOption(CLASSPATH) ? commandLine.getOptionValue(CLASSPATH) : "";
@@ -87,7 +95,7 @@ public class Context {
         logLevel = loggingLevel;
     }
 
-    public String getSourceRoot() {
+    public String[] getSourceRoot() {
         return sourceRoot;
     }
 
@@ -137,6 +145,14 @@ public class Context {
 
     public int getTargetVersion() {
         return target;
+    }
+
+    public ClassPathType getOutputType() {
+        return outputRoot.endsWith(JAR) ? Jar : Folder;
+    }
+
+    public List<Source> getSources() {
+        return Stream.of(sourceRoot).map(r -> new Source(this, r)).collect(toList());
     }
 
     private int tryParseInt(String optionValue, int defaultVersion) {

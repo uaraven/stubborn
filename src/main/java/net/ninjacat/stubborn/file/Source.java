@@ -30,12 +30,10 @@ public class Source {
 
     private final ClassPathType type;
     private final String root;
-    private final ClassPathType outType;
 
-    public Source(Context context) {
-        this.root = context.getSourceRoot();
+    public Source(Context context, String root) {
+        this.root = root;
         this.type = isZipFile(root) ? Jar : Folder;
-        this.outType = context.getOutputRoot().endsWith(JAR) ? Jar : Folder;
     }
 
     public ClassPathType getType() {
@@ -44,10 +42,6 @@ public class Source {
 
     public String getRoot() {
         return root;
-    }
-
-    public ClassPathType getOutputType() {
-        return outType;
     }
 
     private boolean isZipFile(String fileName) {

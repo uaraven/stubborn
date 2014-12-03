@@ -16,7 +16,7 @@
 
 package net.ninjacat.stubborn.file;
 
-public final class Consts {
+final class Consts {
 
     public static final String CLASS_EXT = ".class";
 

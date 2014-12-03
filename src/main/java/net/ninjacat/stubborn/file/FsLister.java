@@ -40,7 +40,7 @@ public class FsLister implements ClassLister {
         try {
             return Files.walk(path).map(Path::toFile).filter(f -> f.isFile() && f.getAbsolutePath().endsWith(CLASS_EXT))
                     .map(f -> convertPathToClassName(root, f.getAbsolutePath())).collect(Collectors.toList());
-        } catch (IOException e) {
+        } catch (IOException ignored) {
             return Collections.emptyList();
         }
     }

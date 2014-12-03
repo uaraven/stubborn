@@ -26,6 +26,8 @@ import net.ninjacat.stubborn.file.Writer;
 import net.ninjacat.stubborn.generator.rules.MethodMatcher;
 import net.ninjacat.stubborn.generator.rules.RulesProvider;
 import net.ninjacat.stubborn.generator.rules.TransformRules;
+import net.ninjacat.stubborn.log.Logger;
+import net.ninjacat.stubborn.transform.Context;
 
 import javax.inject.Inject;
 import java.io.FileNotFoundException;
@@ -33,8 +35,9 @@ import java.io.IOException;
 import java.util.*;
 
 import static javassist.Modifier.*;
-import static net.ninjacat.stubborn.generator.ClassUtils.*;
-import static net.ninjacat.stubborn.generator.LogLevel.*;
+import static net.ninjacat.stubborn.generator.ClassUtils.appendClasses;
+import static net.ninjacat.stubborn.generator.ClassUtils.getInputClassList;
+import static net.ninjacat.stubborn.log.LogLevel.*;
 
 public class Transformer {
 
@@ -96,6 +99,11 @@ public class Transformer {
         logger.log(Default, "Done");
     }
 
+    private static boolean isNonModifiableMethod(CtMember method) {
+        int modifiers = method.getModifiers();
+        return isAbstract(modifiers) || isNative(modifiers);
+    }
+
     private static boolean isModifier(CtClass cls, int modifier) {
         return (cls.getModifiers() & modifier) == modifier;
     }
@@ -147,7 +155,7 @@ public class Transformer {
         try {
             CtClass javassistDesc = pool.get(Desc.class.getCanonicalName());
             storeClass(context, writer, javassistDesc);
-        } catch (NotFoundException | IOException ex) {
+        } catch (NotFoundException | IOException ignored) {
             logger.err("Failed to inject required javassist runtime class, results may be not usable");
         }
     }

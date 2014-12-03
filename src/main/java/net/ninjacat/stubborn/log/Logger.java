@@ -14,11 +14,22 @@
  * limitations under the License.
  */
 
-package net.ninjacat.stubborn.generator;
+package net.ninjacat.stubborn.log;
+
+import net.ninjacat.stubborn.transform.Context;
 
 public class Logger {
 
     private int level;
+
+    public static void err(String text, Object... params) {
+        System.err.println(String.format(text, params));
+    }
+
+    public static void err(Throwable t, String text, Object... params) {
+        t.printStackTrace();
+        System.err.println(String.format(text, params));
+    }
 
     public void init(Context context) {
         level = context.getLogLevel();
@@ -28,15 +39,6 @@ public class Logger {
         if (level.getLevel() <= this.level) {
             System.out.println(String.format(text, params));
         }
-    }
-
-    public void err(String text, Object... params) {
-        System.err.println(String.format(text, params));
-    }
-
-    public void err(Throwable t, String text, Object... params) {
-        t.printStackTrace();
-        System.err.println(String.format(text, params));
     }
 
 

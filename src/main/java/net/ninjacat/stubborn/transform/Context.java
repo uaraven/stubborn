@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.ninjacat.stubborn.generator;
+package net.ninjacat.stubborn.transform;
 
 import javassist.bytecode.ClassFile;
 import net.ninjacat.stubborn.file.ClassPathType;
@@ -148,7 +148,7 @@ public class Context {
     }
 
     public List<Source> getSources() {
-        return Stream.of(sourceRoot).map(r -> new Source(r)).collect(toList());
+        return Stream.of(sourceRoot).map(Source::new).collect(toList());
     }
 
     private static int tryParseInt(String optionValue, int defaultVersion) {

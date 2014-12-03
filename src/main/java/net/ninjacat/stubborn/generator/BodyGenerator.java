@@ -17,20 +17,24 @@
 package net.ninjacat.stubborn.generator;
 
 import javassist.CtClass;
+import javassist.CtMember;
 import javassist.CtMethod;
 import javassist.NotFoundException;
+import net.ninjacat.stubborn.log.Logger;
 import net.ninjacat.stubborn.reflect.Types;
+import net.ninjacat.stubborn.transform.Context;
+import net.ninjacat.stubborn.transform.ReturnObjects;
 import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 
-import static net.ninjacat.stubborn.generator.LogLevel.Noisy;
-import static net.ninjacat.stubborn.generator.LogLevel.Verbose;
+import static net.ninjacat.stubborn.log.LogLevel.Noisy;
+import static net.ninjacat.stubborn.log.LogLevel.Verbose;
 
 public class BodyGenerator {
 
-    public static final String SIGNATURE_PLACEHOLDER = "\\$sign";
-    public static final String METHOD_NAME_PLACEHOLDER = "\\$method";
+    private static final String SIGNATURE_PLACEHOLDER = "\\$sign";
+    private static final String METHOD_NAME_PLACEHOLDER = "\\$method";
     private final Logger logger;
 
     @Inject
@@ -53,7 +57,7 @@ public class BodyGenerator {
         return body;
     }
 
-    private static String injectMethodVariable(String methodBody, CtMethod method) {
+    private static String injectMethodVariable(String methodBody, CtMember method) {
         String result = methodBody.replaceAll(METHOD_NAME_PLACEHOLDER, "\"" + method.getName() + "\"");
         result = result.replaceAll(SIGNATURE_PLACEHOLDER, "\"" + method.getSignature() + "\"");
         return result;

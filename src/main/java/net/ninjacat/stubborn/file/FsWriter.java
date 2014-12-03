@@ -21,6 +21,7 @@ import net.ninjacat.stubborn.exceptions.TransformationException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 public class FsWriter implements Writer {
 
@@ -38,7 +39,7 @@ public class FsWriter implements Writer {
         if (parent != null && !parent.exists()) {
             parent.mkdirs();
         }
-        try (FileOutputStream output = new FileOutputStream(targetFile)) {
+        try (OutputStream output = new FileOutputStream(targetFile)) {
             output.write(classData);
         } catch (IOException e) {
             throw new TransformationException("Failed to write resulting class file " + targetFile, e);

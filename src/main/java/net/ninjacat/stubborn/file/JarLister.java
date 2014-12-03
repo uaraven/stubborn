@@ -34,15 +34,15 @@ public class JarLister implements ClassLister {
     @Override
     public List<String> list() {
         try {
-            List<String> results = new ArrayList<>();
+            Collection<String> results = new ArrayList<>();
             ZipFile file = new ZipFile(jarFile);
             asIterator(file.entries()).forEachRemaining(e -> {
                 if (e.getName().endsWith(CLASS_EXT)) {
                     results.add(e.getName());
                 }
             });
-            return results.parallelStream().map(this::convertPathToClassName).collect(Collectors.toList());
-        } catch (IOException e) {
+            return results.parallelStream().map(JarLister::convertPathToClassName).collect(Collectors.toList());
+        } catch (IOException ignored) {
             return Collections.emptyList();
         }
     }
@@ -61,7 +61,7 @@ public class JarLister implements ClassLister {
         };
     }
 
-    private String convertPathToClassName(String p) {
+    private static String convertPathToClassName(String p) {
         return p.substring(0, p.length() - CLASS_EXT.length()).replaceAll("/", ".");
     }
 

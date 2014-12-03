@@ -14,20 +14,9 @@
  * limitations under the License.
  */
 
-package net.ninjacat.stubborn.generator;
+package net.ninjacat.stubborn.transform;
 
-public enum LogLevel {
-    Default(0),
-    Verbose(1),
-    Noisy(2);
-
-    private final int level;
-
-    LogLevel(int level) {
-        this.level = level;
-    }
-
-    public int getLevel() {
-        return level;
-    }
+public enum ReturnObjects {
+    Nulls,
+    Instance
 }

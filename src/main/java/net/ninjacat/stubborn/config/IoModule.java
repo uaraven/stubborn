@@ -23,7 +23,7 @@ import net.ninjacat.stubborn.file.ClassPathType;
 import net.ninjacat.stubborn.file.FsAccessProvider;
 import net.ninjacat.stubborn.file.JarAccessProvider;
 
-public class IoModule extends AbstractModule {
+class IoModule extends AbstractModule {
     @Override
     protected void configure() {
         MapBinder<ClassPathType, ClassAccessProvider> clsBinder = MapBinder.newMapBinder(binder(), ClassPathType.class, ClassAccessProvider.class);

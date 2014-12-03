@@ -18,11 +18,11 @@ package net.ninjacat.stubborn;
 
 import net.ninjacat.stubborn.config.Bootstrapper;
 import net.ninjacat.stubborn.exceptions.TransformationException;
-import net.ninjacat.stubborn.generator.Context;
 import net.ninjacat.stubborn.generator.Transformer;
+import net.ninjacat.stubborn.transform.Context;
 import org.apache.commons.cli.*;
 
-public class Stubborn {
+final class Stubborn {
 
     private Stubborn() {
     }
@@ -73,7 +73,7 @@ public class Stubborn {
                 withDescription("Transformation rules file. If not specified, then default-rules.xml in current directory will be used").
                 create('r');
         Option stripNonPublic = OptionBuilder.withLongOpt(Context.STRIP_NON_PUBLIC).
-                withDescription("Only stub public methods, non-public methods will be stripped from output classes").
+                withDescription("Only stub public methods, non-public methods will be removed from output classes").
                 create('n');
         Option stripFields = OptionBuilder.withLongOpt(Context.STRIP_FIELDS).
                 withDescription("Remove field definitions from classes").
@@ -82,7 +82,7 @@ public class Stubborn {
                 withDescription("Remove final modifier from methods and classes").
                 create('f');
         Option generateInstances = OptionBuilder.withLongOpt(Context.GENERATE_INSTANCES).
-                withDescription("Generate return newInstanse() for reference return types").
+                withDescription("Generate return newInstance() for reference return types").
                 create("g");
         Option targetVersion = OptionBuilder.withArgName("version").withLongOpt(Context.TARGET_VERSION).
                 withDescription("Generate class files with specified target Java version").hasOptionalArg().withType(Integer.class).

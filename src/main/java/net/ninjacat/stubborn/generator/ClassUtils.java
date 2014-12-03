@@ -17,7 +17,6 @@
 package net.ninjacat.stubborn.generator;
 
 import javassist.ClassPool;
-import javassist.CtMember;
 import javassist.NotFoundException;
 import net.ninjacat.stubborn.exceptions.TransformationException;
 import net.ninjacat.stubborn.file.ClassAccessProvider;
@@ -29,16 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static javassist.Modifier.isAbstract;
-import static javassist.Modifier.isNative;
-
-public final class ClassUtils {
+final class ClassUtils {
     private ClassUtils() {
-    }
-
-    public static boolean isNonModifiableMethod(CtMember method) {
-        int modifiers = method.getModifiers();
-        return isAbstract(modifiers) || isNative(modifiers);
     }
 
     public static void appendClasses(ClassPool injectPool, String path) {

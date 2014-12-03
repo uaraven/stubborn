@@ -26,15 +26,15 @@ import java.util.regex.Pattern;
 @XStreamAlias("method")
 public class MethodMatcher {
     @XStreamAlias("returntype")
-    private String returnType;
+    private final String returnType;
     @XStreamAlias("classname")
-    private String className;
+    private final String className;
     @XStreamAlias("methodname")
-    private String methodName;
+    private final String methodName;
     @XStreamAlias("signature")
-    private String signature;
+    private final String signature;
     @XStreamAlias("body")
-    private String methodBody;
+    private final String methodBody;
 
     private Pattern classNameRe;
     private Pattern methodNameRe;

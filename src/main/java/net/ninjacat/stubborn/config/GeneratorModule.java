@@ -19,13 +19,13 @@ package net.ninjacat.stubborn.config;
 import com.google.inject.AbstractModule;
 import net.ninjacat.stubborn.generator.BodyGenerator;
 import net.ninjacat.stubborn.generator.ClassInjector;
-import net.ninjacat.stubborn.generator.Logger;
 import net.ninjacat.stubborn.generator.Transformer;
 import net.ninjacat.stubborn.generator.rules.RulesProvider;
+import net.ninjacat.stubborn.log.Logger;
 
 import javax.inject.Singleton;
 
-public class GeneratorModule extends AbstractModule {
+class GeneratorModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(ClassInjector.class).in(Singleton.class);

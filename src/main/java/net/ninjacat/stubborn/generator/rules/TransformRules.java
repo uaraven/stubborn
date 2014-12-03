@@ -42,7 +42,7 @@ public class TransformRules {
     private List<Pattern> stripPatterns;
     private List<Pattern> skipPatterns;
 
-    public TransformRules() {
+    private TransformRules() {
         matchers = new ArrayList<>();
         injectRules = new ArrayList<>();
         stripClasses = new ArrayList<>();

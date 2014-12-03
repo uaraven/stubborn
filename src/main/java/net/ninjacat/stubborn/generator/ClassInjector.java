@@ -25,6 +25,7 @@ import net.ninjacat.stubborn.file.ClassPathType;
 import net.ninjacat.stubborn.file.Source;
 import net.ninjacat.stubborn.file.Writer;
 import net.ninjacat.stubborn.generator.rules.InjectRule;
+import net.ninjacat.stubborn.log.Logger;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static net.ninjacat.stubborn.generator.ClassUtils.appendClasses;
-import static net.ninjacat.stubborn.generator.LogLevel.Noisy;
+import static net.ninjacat.stubborn.log.LogLevel.Noisy;
 
 public class ClassInjector {
 

@@ -143,12 +143,14 @@ public class Transformer {
         }
     }
 
-    private List<String> getInputClassList(List<Source> sources) {
+    private List<String> getInputClassList(Iterable<Source> sources) {
         List<String> classes = new ArrayList<>();
         for (Source source : sources) {
             ClassLister reader = providers.get(source.getType()).getReader(source.getRoot());
             classes.addAll(reader.list());
         }
+        // trick to process internal classes first
+        classes.sort((o1, o2) -> Boolean.compare(o2.contains("$"), o1.contains("$")));
         return classes;
     }
 
@@ -215,6 +217,9 @@ public class Transformer {
             } else {
                 logger.log(Noisy, "Removing constructor %s body from %s ", constructor.getSignature(), cls.getName());
                 try {
+                    if (isPrivate(constructor.getModifiers())) {
+                        constructor.setModifiers(constructor.getModifiers() - PRIVATE);
+                    }
                     replaceMethodBody(constructor, null);
                 } catch (Exception ignored) {
                     logger.log(Default, "Failed to replace body of %s constructor in %s", constructor.getSignature(), cls.getName());

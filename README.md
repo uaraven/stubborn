@@ -130,7 +130,8 @@ standard class path is included automatically, you can add additional folders an
 #### Behavior modifications ####
 
 There is currently no way to tweak constructor stubbing. Mostly constructors have their bodies removed, if it fails for
-any reason, then such constructor is left as is.
+any reason, then such constructor is left as is. Private constructors are made package private, otherwise it may be
+impossible to create internal private classes with private constructors.
 
 By default class version is not changed, but you can set new version for a generated classes with `--target X`, where
 X is major Java version, i.e. 1, 2, 3, ... 8. 

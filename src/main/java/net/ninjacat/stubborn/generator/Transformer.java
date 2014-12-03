@@ -1,17 +1,17 @@
 /*
  * Copyright 2014 Oleksiy Voronin <ovoronin@gmail.com>
  *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package net.ninjacat.stubborn.generator;
@@ -19,7 +19,10 @@ package net.ninjacat.stubborn.generator;
 import javassist.*;
 import javassist.runtime.Desc;
 import net.ninjacat.stubborn.exceptions.TransformationException;
-import net.ninjacat.stubborn.file.*;
+import net.ninjacat.stubborn.file.ClassAccessProvider;
+import net.ninjacat.stubborn.file.ClassPathType;
+import net.ninjacat.stubborn.file.Source;
+import net.ninjacat.stubborn.file.Writer;
 import net.ninjacat.stubborn.generator.rules.MethodMatcher;
 import net.ninjacat.stubborn.generator.rules.RulesProvider;
 import net.ninjacat.stubborn.generator.rules.TransformRules;
@@ -30,6 +33,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static javassist.Modifier.*;
+import static net.ninjacat.stubborn.generator.ClassUtils.*;
 import static net.ninjacat.stubborn.generator.LogLevel.*;
 
 public class Transformer {
@@ -38,12 +42,15 @@ public class Transformer {
     private final RulesProvider rulesProvider;
     private final BodyGenerator bodyGenerator;
     private final Logger logger;
+    private final ClassInjector injector;
 
     @Inject
     public Transformer(Map<ClassPathType, ClassAccessProvider> providers,
                        RulesProvider rulesProvider,
                        BodyGenerator bodyGenerator,
+                       ClassInjector injector,
                        Logger logger) {
+        this.injector = injector;
         this.providers = Collections.unmodifiableMap(providers);
         this.rulesProvider = rulesProvider;
         this.bodyGenerator = bodyGenerator;
@@ -56,10 +63,10 @@ public class Transformer {
         ClassPool pool = new ClassPool(false);
 
         List<Source> sources = context.getSources();
-        List<String> classList = getInputClassList(sources);
+        List<String> classList = getInputClassList(providers, sources);
         Writer writer = providers.get(context.getOutputType()).getWriter(context.getOutputRoot());
 
-        addSourceClassPaths(context, pool, sources);
+        addSourceClassPaths(pool, sources);
         addExtraClassPath(context, pool);
         pool.appendSystemPath();
 
@@ -78,11 +85,11 @@ public class Transformer {
             }
         }
 
-        try {
-            injectJavassistRuntime(context, pool, writer);
-        } catch (NotFoundException | IOException ignored) {
-            logger.log(Default, "Failed to inject required javassist runtime class, results may be not usable");
+        if (rules.hasInjectRules()) {
+            logger.log(Verbose, "Injecting classes");
+            injector.injectClasses(writer, rules.getInjectRules());
         }
+        injectJavassistRuntime(context, pool, writer);
 
         writer.close();
 
@@ -116,20 +123,12 @@ public class Transformer {
         }
     }
 
-    private static boolean isNonModifiableMethod(CtMember method) {
-        int modifiers = method.getModifiers();
-        return isAbstract(modifiers) || isNative(modifiers);
-    }
 
-    private void addSourceClassPaths(Context context, ClassPool pool, List<Source> sources) {
-        for (Source source : sources) {
-            try {
-                pool.appendClassPath(source.getRoot());
-                logger.log(Noisy, "Using %s as source", context.getSourceRoot());
-            } catch (NotFoundException e) {
-                throw new TransformationException("Failed to load source classes from " + source.getRoot(), e);
-            }
-        }
+    private void addSourceClassPaths(ClassPool pool, Collection<Source> sources) {
+        sources.stream().forEach(s -> {
+            appendClasses(pool, s.getRoot());
+            logger.log(Noisy, "Using %s as source", s.getRoot());
+        });
     }
 
     private void addExtraClassPath(Context context, ClassPool pool) {
@@ -143,21 +142,14 @@ public class Transformer {
         }
     }
 
-    private List<String> getInputClassList(Iterable<Source> sources) {
-        List<String> classes = new ArrayList<>();
-        for (Source source : sources) {
-            ClassLister reader = providers.get(source.getType()).getReader(source.getRoot());
-            classes.addAll(reader.list());
-        }
-        // trick to process internal classes first
-        classes.sort((o1, o2) -> Boolean.compare(o2.contains("$"), o1.contains("$")));
-        return classes;
-    }
-
-    private void injectJavassistRuntime(Context context, ClassPool pool, Writer writer) throws NotFoundException, IOException {
+    private void injectJavassistRuntime(Context context, ClassPool pool, Writer writer) {
         logger.log(Verbose, "Injecting javassist runtime");
-        CtClass javassistDesc = pool.get(Desc.class.getCanonicalName());
-        storeClass(context, writer, javassistDesc);
+        try {
+            CtClass javassistDesc = pool.get(Desc.class.getCanonicalName());
+            storeClass(context, writer, javassistDesc);
+        } catch (NotFoundException | IOException ex) {
+            logger.err("Failed to inject required javassist runtime class, results may be not usable");
+        }
     }
 
     private void transformClass(Context context, String className, ClassPool pool, TransformRules rules, Writer writer) throws NotFoundException, IOException {

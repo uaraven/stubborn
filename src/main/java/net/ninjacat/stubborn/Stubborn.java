@@ -1,17 +1,17 @@
 /*
  * Copyright 2014 Oleksiy Voronin <ovoronin@gmail.com>
  *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package net.ninjacat.stubborn;
@@ -66,7 +66,7 @@ public class Stubborn {
     @SuppressWarnings("AccessStaticViaInstance")
     private static Options createOptions() {
         Option source = OptionBuilder.withArgName("path|jar").withLongOpt(Context.SOURCE).hasArgs().isRequired().
-                withDescription("Source path. Might be folder on a file system or a jar-file").create('s');
+                withDescription("Source path. Might be folder on a file system or a jar-file. You can specify multiple sources").create('s');
         Option output = OptionBuilder.withArgName("path|jar").withLongOpt(Context.OUTPUT).hasArg().isRequired().
                 withDescription("Folder for output. Transformed classes will be stored to this folder").create('o');
         Option rules = OptionBuilder.withArgName("xml-file").withLongOpt(Context.TRANSFORM_RULES).hasArg().
@@ -87,7 +87,6 @@ public class Stubborn {
         Option targetVersion = OptionBuilder.withArgName("version").withLongOpt(Context.TARGET_VERSION).
                 withDescription("Generate class files with specified target Java version").hasOptionalArg().withType(Integer.class).
                 create('t');
-
         Option verbose = OptionBuilder.withArgName("level").withLongOpt(Context.VERBOSE).
                 withDescription("Provide more output (-v 2 for even more output)").hasOptionalArg().withType(Integer.class).
                 create('v');

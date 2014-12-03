@@ -1,17 +1,17 @@
 /*
  * Copyright 2014 Oleksiy Voronin <ovoronin@gmail.com>
  *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package net.ninjacat.stubborn.generator.rules;
@@ -24,15 +24,14 @@ import javassist.CtMethod;
 import net.ninjacat.stubborn.exceptions.TransformationException;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @XStreamAlias("rules")
 public class TransformRules {
+    @XStreamImplicit(itemFieldName = "inject")
+    private final List<InjectRule> injectRules;
     @XStreamAlias("methods")
     private final List<MethodMatcher> matchers;
     @XStreamImplicit(itemFieldName = "strip-class")
@@ -45,13 +44,14 @@ public class TransformRules {
 
     public TransformRules() {
         matchers = new ArrayList<>();
+        injectRules = new ArrayList<>();
         stripClasses = new ArrayList<>();
         skipClasses = new ArrayList<>();
     }
 
     public static TransformRules loadFromStream(InputStream inputStream) {
         XStream stream = new XStream();
-        stream.processAnnotations(new Class[]{TransformRules.class, MethodMatcher.class});
+        stream.processAnnotations(new Class[]{TransformRules.class, MethodMatcher.class, InjectRule.class});
         return verify((TransformRules) stream.fromXML(inputStream));
     }
 
@@ -77,6 +77,14 @@ public class TransformRules {
             }
         }
         return false;
+    }
+
+    public boolean hasInjectRules() {
+        return injectRules != null && !injectRules.isEmpty();
+    }
+
+    public List<InjectRule> getInjectRules() {
+        return Collections.unmodifiableList(injectRules);
     }
 
     public Optional<MethodMatcher> findMatcher(CtMethod method, boolean ignoreDuplicates) {

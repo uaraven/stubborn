@@ -1,17 +1,17 @@
 /*
  * Copyright 2014 Oleksiy Voronin <ovoronin@gmail.com>
  *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package net.ninjacat.stubborn.generator.rules;
@@ -21,6 +21,7 @@ import net.ninjacat.stubborn.exceptions.TransformationException;
 import net.ninjacat.stubborn.fixtures.Test1;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Optional;
 
 import static net.ninjacat.stubborn.generator.rules.ClassFixtures.getMethod;
@@ -58,7 +59,7 @@ public class TransformRulesTest {
         Optional<MethodMatcher> matcher = transformRules.findMatcher(getString, true);
 
         assertTrue("Should find exactly one matcher", matcher.isPresent());
-        assertEquals("Should select first matcher", matcher.get().getMethodBody(), "return \"get-string\";");
+        assertEquals("Should select first matcher", "return \"get-string\";", matcher.get().getMethodBody());
     }
 
     @Test(expected = TransformationException.class)
@@ -109,4 +110,30 @@ public class TransformRulesTest {
 
         assertFalse("Should not allow to skip unlisted class", rules.shouldStripClass("java.sql.Date"));
     }
+
+    @Test
+    public void shouldNotHaveInjectRules() throws Exception {
+        TransformRules rules = TransformRules.loadFromStream(getClass().getResourceAsStream("/string-getter.xml"));
+
+        assertFalse("Should not have inject rules", rules.hasInjectRules());
+    }
+
+    @Test
+    public void shouldLoadInjectRules() throws Exception {
+        TransformRules rules = TransformRules.loadFromStream(getClass().getResourceAsStream("/injector.xml"));
+
+        assertTrue("Should have inject rules", rules.hasInjectRules());
+    }
+
+    @Test
+    public void shouldCorrectlyLoadInjectRules() throws Exception {
+        TransformRules rules = TransformRules.loadFromStream(getClass().getResourceAsStream("/injector.xml"));
+        List<InjectRule> injectRules = rules.getInjectRules();
+
+        assertEquals("Inject rule path should be correct", "/injected.jar", injectRules.get(0).getPath());
+        assertEquals("Classes to inject should be correct", "org.example.Inject1", injectRules.get(0).getClasses().get(0));
+        assertEquals("Classes to inject should be correct", "org.example.Inject2", injectRules.get(0).getClasses().get(1));
+    }
+
+
 }

@@ -38,9 +38,9 @@ Javassist [syntax](http://www.csg.ci.i.u-tokyo.ac.jp/~chiba/javassist/tutorial/t
 Stubborn accepts folders and jar files as input and can produce folders and jar files as output. Magic happens in between. 
 Rules by which magic happens are defined in rules file. 
 
-#### Rules file ####
+#### Matching methods ####
 
-Rules file is an XML-file which defines how exactly should methods be stubbed.
+Method stubbing is defined in rules file as a simple XML.
 
 Simplest rule file could be written as following:
 ```xml
@@ -85,13 +85,12 @@ See [Javassist Tutorial](http://www.csg.ci.i.u-tokyo.ac.jp/~chiba/javassist/tuto
 
 If method is matched by multiple rules, Stubborn will fail immediately and tell you which matchers are conflicting. You can override this behavior with `--ignore-duplicate-matchers` parameter, in this case first matcher will be selected.
 
-If method is not matched by any rules its body will be replaced with `return null;` for all methods which return objects and with `return 0;` for all methods which return numbers.
+If method is not matched by any rules its body will be replaced with with `return 0;` for all methods which return numbers (false for boolean) and 
+`return null;` for all methods which return objects. 
 
-If no matching rules are supplied the default one will be used. It is actually the one shown in the example above. 
+If no matching rules are supplied the default one will be used. It is actually the one shown in the first example above. 
 This behavior can be changed with `--generate-instances` option. When this option is specified Stubborn will generate newInstance() call for  methods which return reference types. Such types must have public default constructor. If return type is a primitive wrapper, then correct constructor call will be generated, for example `new java.lang.Float(0.0f)` for floats or `new java.lang.Boolean(false)` for booleans.
  
-All methods which return `java.lang.String` will return empty string, other methods will be stubbed with default value (i.e. zero, null or false).
-
 You can also remove classes from the processed jar/folder. Use `<strip-class>` tag with regular expressions to match fully qualified class names to be removed.
 
 ```xml
@@ -127,17 +126,54 @@ You can combine `skip-class` and `strip-class` rules, but remember that `skip-cl
 For transformation to work, all of the classes referenced in transformed code should be available on the classpath. Your 
 standard class path is included automatically, you can add additional folders and/or jar-files with `--classpath` option.
 
-#### Behavior modifications ####
+#### Class Injection ####
+
+Sometimes there might be a need to add classes to a resulting jar/folder without stubbing those classes. This is 
+ achieved through class injection. 
+ 
+Injection allows you to select a number of jar-files or folders and define a class-name matcher to select some or all of the classes inside those jars/folders to be included into resulting class set without
+any changes.
+ 
+To do so, include injection rules in the rules file
+ 
+```xml
+<?xml version="1.0"?>
+<rules>
+    <inject>
+        <path>file.jar</path>
+        <class>net\.example\.utils\..*</class>
+        <class>net\.other\.utils\..*</class>
+    </inject>
+    <inject>
+        <path>path/to/folder</path>
+        <class>com\.company\.network\..*</class>
+    </inject>    
+    <methods>
+        .
+        .
+        .
+    </methods>
+</rules>
+```
+
+Each inject rule contains a path to a jar-file or folder and a list of regular expression patterns to match class names
+of the files in this jar/folder.
+
+You can have multiple inject rules and you may have multiple regex patterns in each.
+
+#### Limitations ####
 
 There is currently no way to tweak constructor stubbing. Mostly constructors have their bodies removed, if it fails for
 any reason, then such constructor is left as is. Private constructors are made package private, otherwise it may be
-impossible to create internal private classes with private constructors.
+impossible to create internal private classes.
+
+#### Other options ####
 
 By default class version is not changed, but you can set new version for a generated classes with `--target X`, where
 X is major Java version, i.e. 1, 2, 3, ... 8. 
 
-No verification is done, so if the code uses StringBuilder class and you set version to 4, you will most likely get 
-compilation errors. 
+No verification is done, so pay attention and do not use classes code which are not supported by target version. 
+For example if the code uses StringBuilder class and you set version to 4, you might get compilation errors. 
 
 There are several more command-line parameters which affect how resulting classes are generated:
 

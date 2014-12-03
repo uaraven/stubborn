@@ -14,17 +14,26 @@
  * limitations under the License.
  */
 
-package net.ninjacat.stubborn.file;
+package net.ninjacat.stubborn.generator.rules;
 
-public class FsAccessProvider implements ClassAccessProvider {
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
-    @Override
-    public ClassLister getReader(String path) {
-        return new FsLister(path);
+import java.util.Collections;
+import java.util.List;
+
+@XStreamAlias("inject")
+public class InjectRule {
+    @XStreamAlias("path")
+    private String path;
+    @XStreamImplicit(itemFieldName = "class")
+    private List<String> classes;
+
+    public String getPath() {
+        return path;
     }
 
-    @Override
-    public Writer getWriter(String path) {
-        return new FsWriter(path);
+    public List<String> getClasses() {
+        return Collections.unmodifiableList(classes);
     }
 }

@@ -212,17 +212,17 @@ public class Transformer {
     private void transformConstructors(Context context, CtClass cls) throws NotFoundException {
         for (CtConstructor constructor : cls.getDeclaredConstructors()) {
             if (context.shouldIgnoreNonPublic() && !isModifier(constructor, PUBLIC)) {
-                logger.log(Noisy, "Deleting constructor %s from class %s", constructor.getName(), cls.getName());
+                logger.log(Noisy, "Deleting constructor %s", constructor.getLongName());
                 cls.removeConstructor(constructor);
             } else {
-                logger.log(Noisy, "Removing constructor %s body from %s ", constructor.getSignature(), cls.getName());
+                logger.log(Noisy, "Removing constructor %s", constructor.getLongName());
                 try {
                     if (isPrivate(constructor.getModifiers())) {
                         constructor.setModifiers(constructor.getModifiers() - PRIVATE);
                     }
                     replaceMethodBody(constructor, null);
                 } catch (Exception ignored) {
-                    logger.log(Default, "Failed to replace body of %s constructor in %s", constructor.getSignature(), cls.getName());
+                    logger.log(Default, "Failed to replace body of %s", constructor.getLongName());
                 }
             }
         }
@@ -231,20 +231,25 @@ public class Transformer {
     private void transformMethods(Context context, TransformRules rules, CtClass cls) throws NotFoundException {
         for (CtMethod method : cls.getDeclaredMethods()) {
             if (context.shouldStripFinals() && isModifier(method, FINAL) && !isNative(method.getModifiers())) {
-                logger.log(Noisy, "Removing final modifier from method %s in class %s", method.getName(), cls.getName());
+                logger.log(Noisy, "Removing final modifier from method %s", method.getLongName());
                 method.setModifiers(method.getModifiers() - FINAL);
             }
             if (context.shouldIgnoreNonPublic() && !isModifier(method, PUBLIC)) {
-                logger.log(Noisy, "Removing method %s from class %s", method.getName(), cls.getName());
+                logger.log(Noisy, "Removing method %s", method.getLongName());
                 cls.removeMethod(method);
             }
             if (isNonModifiableMethod(method)) {
-                logger.log(Noisy, "Skipping unmodifiable method %s in class %s", method.getName(), cls.getName());
+                logger.log(Noisy, "Skipping unmodifiable method %s", method.getLongName());
             } else {
                 Optional<MethodMatcher> matcher = rules.findMatcher(method, context.shouldIgnoreDuplicateMatchers());
                 String methodBody = matcher.isPresent() ? matcher.get().getMethodBody() : null;
-                methodBody = bodyGenerator.alterBody(context, cls, method, methodBody);
-                replaceMethodBody(method, methodBody);
+                boolean shouldModifyBody = !matcher.isPresent() || !matcher.get().shouldKeepBody();
+                if (shouldModifyBody) {
+                    methodBody = bodyGenerator.alterBody(context, cls, method, methodBody);
+                    replaceMethodBody(method, methodBody);
+                } else {
+                    logger.log(Noisy, "Keeping %s body", method.getLongName());
+                }
             }
         }
     }

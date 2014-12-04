@@ -46,13 +46,12 @@ public class BodyGenerator {
         String body = methodBody;
         if (body == null) {
             if (context.getObjectReturnStrategy() == ReturnObjects.Instance) {
-                logger.log(Verbose, "Rewriting method %s in class %s with default body",
-                        method.getName(), method.getDeclaringClass().getName());
+                logger.log(Verbose, "Rewriting method %s with default body", method.getLongName());
                 body = generateReturnInstance(method);
             }
         } else {
             body = injectMethodVariable(methodBody, method);
-            logger.log(Verbose, "Rewriting method %s in class %s", method.getName(), cls.getName());
+            logger.log(Verbose, "Rewriting method %s", method.getLongName());
         }
         return body;
     }

@@ -38,7 +38,7 @@ Javassist [syntax](http://www.csg.ci.i.u-tokyo.ac.jp/~chiba/javassist/tutorial/t
 Stubborn accepts folders and jar files as input and can produce folders and jar files as output. Magic happens in between. 
 Rules by which magic happens are defined in rules file. 
 
-#### Matching methods ####
+#### Stubbing methods ####
 
 Method stubbing is defined in rules file as a simple XML.
 
@@ -90,8 +90,21 @@ If method is not matched by any rules its body will be replaced with with `retur
 
 If no matching rules are supplied the default one will be used. It is actually the one shown in the first example above. 
 This behavior can be changed with `--generate-instances` option. When this option is specified Stubborn will generate newInstance() call for  methods which return reference types. Such types must have public default constructor. If return type is a primitive wrapper, then correct constructor call will be generated, for example `new java.lang.Float(0.0f)` for floats or `new java.lang.Boolean(false)` for booleans.
+
+Some methods might be better left unchanged, this, for example, could be useful for `equals()`, `hashCode()` or `toString()`.
+To keep method untouched, add attribute `keep="yes"` to method tag.
+
+```xml
+<method>
+    <methodname>equals</methodname>
+    <signature>(Ljava/lang/Object;)Z</signature>
+    <body keep="yes"/>
+</method>
+```
+
+#### Class processing ####
  
-You can also remove classes from the processed jar/folder. Use `<strip-class>` tag with regular expressions to match fully qualified class names to be removed.
+You can remove classes from the processed jar/folder. Use `<strip-class>` tag with regular expressions to match fully qualified class names to be removed.
 
 ```xml
 <?xml version="1.0"?>

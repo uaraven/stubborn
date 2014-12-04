@@ -105,4 +105,5 @@ public class MethodMatcherTest {
 
         assertFalse("Should not match method with different return type", matcher.isMatching(method));
     }
+
 }

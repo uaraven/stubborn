@@ -17,10 +17,12 @@
 package net.ninjacat.stubborn.generator.rules;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamConverter;
 import javassist.CtMember;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @XStreamAlias("method")
@@ -34,7 +36,8 @@ public class MethodMatcher {
     @XStreamAlias("signature")
     private final String signature;
     @XStreamAlias("body")
-    private final String methodBody;
+    @XStreamConverter(BodyConverter.class)
+    private final Optional<String> methodBody;
 
     private Pattern classNameRe;
     private Pattern methodNameRe;
@@ -44,7 +47,7 @@ public class MethodMatcher {
         this.className = className;
         this.methodName = methodName;
         this.signature = signature;
-        this.methodBody = methodBody;
+        this.methodBody = Optional.ofNullable(methodBody);
     }
 
     public boolean isMissingConditions() {
@@ -55,8 +58,12 @@ public class MethodMatcher {
         return isMatchingSignature(method) && isMatchingParent(method) && isMatchingName(method) && isMatchingResult(method);
     }
 
+    public boolean shouldKeepBody() {
+        return !methodBody.isPresent();
+    }
+
     public String getMethodBody() {
-        return methodBody;
+        return methodBody.orElse(null);
     }
 
     public String repr() {
